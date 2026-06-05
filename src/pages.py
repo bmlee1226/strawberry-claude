@@ -160,43 +160,48 @@ def page_image():
 
     st.title("🖼 이미지 병해충 분석")
 
-    with st.expander("📖 업로드 방법 안내", expanded=False):
-        st.markdown("""
-**방법 1 — 파일 업로드**
-
-1. 왼쪽 **이미지 업로드** 영역을 클릭하거나 파일을 드래그&드롭 하세요.
-2. JPG, PNG, JPEG 형식의 딸기 이미지를 선택합니다.
-3. 업로드가 완료되면 자동으로 분석이 시작됩니다.
-
-> 💡 **좋은 이미지 조건**: 딸기 잎·과실이 화면 중앙에 가득 차도록 촬영, 밝은 조명, 초점이 선명한 사진일수록 정확도가 높아집니다.
-
----
-
-**방법 2 — 카메라 직접 촬영**
-
-1. 오른쪽 **사진 촬영** 영역에서 카메라 접근을 허용합니다.
-2. 딸기를 화면에 맞게 조준한 뒤 촬영 버튼을 누릅니다.
-3. 촬영 즉시 자동으로 분석이 시작됩니다.
-
-> 💡 **촬영 팁**: 흰가루병은 잎 뒷면, 잿빛곰팡이병은 과실 표면을 집중적으로 촬영하세요.
-        """)
+    # 단계 표시
+    st.markdown("""
+    <div style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
+      <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>1 이미지 업로드</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>2 AI 분석</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>3 결과 확인</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     colum1, colum2 = st.columns(2)
 
     with colum1:
-        uploaded_file = st.file_uploader("이미지 업로드", type=["jpg", "jpeg", "png"])
+        with st.container(border=True):
+            st.markdown("#### 📁 파일 업로드")
+            st.caption("JPG · JPEG · PNG 지원 · 드래그&드롭 가능")
+            uploaded_file = st.file_uploader(
+                "이미지를 업로드하세요",
+                type=["jpg", "jpeg", "png"],
+                label_visibility="collapsed",
+            )
+            st.caption("💡 딸기 잎·과실이 화면에 가득 찬 선명한 사진일수록 정확도가 높아집니다.")
 
     with colum2:
-        camera_image = st.camera_input("사진 촬영")
+        with st.container(border=True):
+            st.markdown("#### 📷 카메라 촬영")
+            st.caption("카메라로 직접 촬영합니다")
+            camera_image = st.camera_input(
+                "사진 촬영",
+                label_visibility="collapsed",
+            )
+            st.caption("💡 흰가루병은 잎 뒷면, 잿빛곰팡이병은 과실 표면을 집중적으로 촬영하세요.")
 
     if uploaded_file:
         st.session_state.uploaded_file = uploaded_file
-        st.success("✅ 이미지 업로드 완료")
+        st.success("✅ 이미지가 업로드되었습니다. AI 분석을 시작합니다...")
         go_to("analysis")
 
     elif camera_image:
         st.session_state.uploaded_file = camera_image
-        st.success("✅ 이미지 업로드 완료")
+        st.success("✅ 사진이 촬영되었습니다. AI 분석을 시작합니다...")
         go_to("analysis")
 
 def _render_video_analysis_options(video_path):
@@ -217,37 +222,53 @@ def _render_video_analysis_options(video_path):
     fast_estimated_time = int(videoinfo.duration) / FAST_FPS
     precise_estimated_time = videoinfo.total_frames / PRECISE_FPS
 
-    st.subheader("분석 방식 선택")
+    st.markdown("""
+    <div style='display:flex; gap:0.5rem; align-items:center; margin: 1rem 0 0.5rem 0;'>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>1 동영상 업로드</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>2 분석 방식 선택</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>3 AI 분석</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>4 결과 확인</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
 
     with col1:
-        st.info(
-            f"""
-            빠른 분석
-
-            • 1초당 1프레임 분석
-            • 긴 영상 빠른 확인용
-            • 예상 시간: {fast_estimated_time:.1f}초
-            """
-        )
-        if st.button("빠른 분석 시작", use_container_width=True):
-            st.session_state.analysis_type = "fast"
-            go_to("analysis")
+        with st.container(border=True):
+            st.markdown("### ⚡ 빠른 분석")
+            st.caption("1초당 1프레임 분석 · 빠른 확인용")
+            st.divider()
+            c1, c2 = st.columns(2)
+            c1.metric("분석 프레임", f"{int(videoinfo.duration)}장")
+            c2.metric("예상 소요", f"{fast_estimated_time:.0f}초")
+            st.markdown("""
+- 1초 간격으로 핵심 프레임만 분석
+- 긴 영상도 빠르게 확인 가능
+- 전체 구역 병해 분포 파악에 적합
+            """)
+            if st.button("⚡ 빠른 분석 시작", use_container_width=True, type="primary"):
+                st.session_state.analysis_type = "fast"
+                go_to("analysis")
 
     with col2:
-        st.warning(
-            f"""
-            정밀 분석
-
-            • 모든 프레임 분석
-            • 가장 정확한 결과
-            • 결과 mp4 생성
-            • 예상 시간: {precise_estimated_time:.1f}초
-            """
-        )
-        if st.button("정밀 분석 시작", use_container_width=True):
-            st.session_state.analysis_type = "precise"
-            go_to("analysis")
+        with st.container(border=True):
+            st.markdown("### 🔬 정밀 분석")
+            st.caption("모든 프레임 분석 · 결과 영상 저장")
+            st.divider()
+            c1, c2 = st.columns(2)
+            c1.metric("분석 프레임", f"{videoinfo.total_frames}장")
+            c2.metric("예상 소요", f"{precise_estimated_time:.0f}초")
+            st.markdown("""
+- 모든 프레임을 빠짐없이 분석
+- 탐지 결과가 표시된 MP4 저장
+- 정확한 진단이 필요할 때 추천
+            """)
+            if st.button("🔬 정밀 분석 시작", use_container_width=True, type="primary"):
+                st.session_state.analysis_type = "precise"
+                go_to("analysis")
 
 
 def page_video():
@@ -263,31 +284,27 @@ def page_video():
         _render_video_analysis_options(video_path)
         return
 
-    with st.expander("📖 업로드 방법 안내", expanded=False):
-        st.markdown("""
-**업로드 방법**
+    # 단계 표시
+    st.markdown("""
+    <div style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
+      <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>1 동영상 업로드</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>2 분석 방식 선택</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>3 AI 분석</span>
+      <span style='color:#ccc;'>→</span>
+      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>4 결과 확인</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-1. 아래 **동영상 업로드** 영역을 클릭하거나 파일을 드래그&드롭 하세요.
-2. MP4, AVI, MOV 형식을 지원합니다.
-3. 업로드가 완료되면 영상 정보와 함께 분석 방식 선택 화면이 나타납니다.
-
----
-
-**분석 방식 선택 기준**
-
-| 분석 방식 | 특징 | 추천 상황 |
-|-----------|------|-----------|
-| ⚡ 빠른 분석 | 1초당 1프레임만 분석 | 영상이 길거나 빠르게 확인할 때 |
-| 🔬 정밀 분석 | 모든 프레임 분석 + 결과 영상 저장 | 정확한 진단이 필요할 때 |
-
-> 💡 **촬영 팁**: 딸기 재배 구역을 천천히 이동하며 촬영하면 탐지 정확도가 높아집니다.
-> 영상 길이는 **30초~3분** 내외를 권장합니다.
-        """)
-
-    uploaded_video_file = st.file_uploader(
-        "동영상을 업로드하세요",
-        type=["mp4", "avi", "mov"]
-    )
+    with st.container(border=True):
+        st.markdown("#### 📁 동영상 업로드")
+        st.caption("MP4 · AVI · MOV 지원 · 드래그&드롭 가능 · 권장 길이 30초~3분")
+        uploaded_video_file = st.file_uploader(
+            "동영상을 업로드하세요",
+            type=["mp4", "avi", "mov"],
+            label_visibility="collapsed",
+        )
 
     if uploaded_video_file is not None:
 

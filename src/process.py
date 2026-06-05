@@ -106,92 +106,71 @@ def process_precise_video(video_path, model, conf_threshold):
       (videoinfo.width, videoinfo.height)
   )
   
-  # -----------------------------
-  # 진행률 표시
-  # -----------------------------
-  progress_bar = st.progress(0)
-  
+  # 진행 UI 요소
+  st.markdown("#### 🔬 정밀 분석 진행 중...")
+  progress_bar = st.progress(0, text="분석 준비 중...")
+  col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+  metric_frame   = col_m1.empty()
+  metric_fps     = col_m2.empty()
+  metric_elapsed = col_m3.empty()
+  metric_remain  = col_m4.empty()
+  preview_frame  = st.empty()
+
   start_time = time.time()
-  
-  status_text = st.empty()
-  
-  preview_frame = st.empty()
-  
   frame_idx = 0
-
   detection_frame_count = 0
-
   detected_classes = set()
   detected_class_counts = {}
-  
-  
-  # -----------------------------
+
   # 프레임 처리
-  # -----------------------------
   while cap.isOpened():
       ret, frame = cap.read()
-  
       if not ret:
           break
-  
-      # YOLO 추론
+
       results = model(frame, conf=conf_threshold)
       detection_result = utility.parse_detection_result(results)
 
       if detection_result.detection:
-        detected_classes.add(detection_result.class_id)
-        detection_frame_count += 1
-        cid = detection_result.class_id
-        detected_class_counts[cid] = detected_class_counts.get(cid, 0) + 1
-  
-      # 저장
+          detected_classes.add(detection_result.class_id)
+          detection_frame_count += 1
+          cid = detection_result.class_id
+          detected_class_counts[cid] = detected_class_counts.get(cid, 0) + 1
+
       out.write(detection_result.annotated_frame)
-  
       frame_idx += 1
-  
+
       progress = frame_idx / videoinfo.total_frames
-      progress_bar.progress(progress)
-  
-      # -----------------------------
-      # 시간 계산
-      # -----------------------------
       elapsed_time = time.time() - start_time
-  
       fps_processing = frame_idx / max(elapsed_time, 0.001)
-  
-      remaining_frames = videoinfo.total_frames - frame_idx
-  
-      remaining_time = remaining_frames / fps_processing
-  
-      # -----------------------------
-      # 상태 표시
-      # -----------------------------
+      remaining_time = (videoinfo.total_frames - frame_idx) / fps_processing
+
+      progress_bar.progress(
+          progress,
+          text=f"분석 중... {frame_idx}/{videoinfo.total_frames} 프레임 ({progress*100:.1f}%)"
+      )
 
       if frame_idx % 30 == 0:
-        status_text.text(
-            f"""
-            처리 프레임: {frame_idx}/{videoinfo.total_frames}
-            처리 FPS: {fps_processing:.2f}
-            경과 시간: {elapsed_time:.1f}초
-            남은 예상 시간: {remaining_time:.1f}초
-            """
-        )
-    
+          metric_frame.metric("🎞 처리 프레임", f"{frame_idx}/{videoinfo.total_frames}")
+          metric_fps.metric("⚡ 처리 속도", f"{fps_processing:.1f} FPS")
+          metric_elapsed.metric("⏱ 경과 시간", f"{elapsed_time:.0f}초")
+          metric_remain.metric("⏳ 남은 시간", f"{remaining_time:.0f}초")
+
       if frame_idx % 60 == 0:
-      
           preview_frame.image(
               detection_result.annotated_frame,
-              channels="BGR"
+              caption=f"현재 프레임 미리보기 — {'병해 탐지됨' if detection_result.detection else '정상'}",
+              channels="BGR",
+              use_container_width=True,
           )
-        
-  # 종료
+
   cap.release()
   out.release()
+  progress_bar.progress(1.0, text="✅ 프레임 분석 완료!")
 
-  st.success("분석 완료!")
-  # -----------------------------
   # H.264 변환
-  # -----------------------------
+  st.markdown("#### 🎬 결과 영상 변환 중...")
+  convert_bar = st.progress(0, text="MP4 변환 중...")
   final_output = tempfile.NamedTemporaryFile(
       delete=False,
       suffix=".mp4"
@@ -210,16 +189,13 @@ def process_precise_video(video_path, model, conf_threshold):
   ]
   
   try:
-      subprocess.run(
-          command,
-          check=True
-      )
-  
+      convert_bar.progress(0.3, text="영상 인코딩 중...")
+      subprocess.run(command, check=True)
+      convert_bar.progress(1.0, text="✅ 영상 변환 완료!")
   except Exception as e:
-  
       st.error(f"영상 변환 실패: {e}")
-  
-  st.success("영상 생성 완료!")    
+
+  st.success("🎉 분석 및 영상 생성이 완료되었습니다!")
   os.remove(temp_output)
 
   return AnalysisResult(
