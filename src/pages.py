@@ -518,7 +518,8 @@ def page_analysis():
                 analysis_result = process.process_precise_video(video_path, model, conf_threshold)
 
         st.session_state.analysis_result = analysis_result
-        st.session_state._result_saved = False  # 새 진단마다 저장 상태 초기화
+        st.session_state._result_saved = False
+        st.session_state._result_save_status = None
 
     go_to_top("result")
   
@@ -898,7 +899,20 @@ def _render_history_save_ui():
     st.divider()
 
     if st.session_state.get("_result_saved"):
-        st.success("✅ 진단 이력이 저장되었습니다.")
+        if st.session_state.get("_result_save_status") == "saved":
+            user_name = st.session_state.get("user_name", "")
+            st.markdown(f"""
+<div style='background:#f0fff4; border:2px solid #21c55d; border-radius:12px;
+     padding:1rem 1.2rem;'>
+  <p style='font-size:1.2rem; font-weight:bold; color:#166534; margin:0;'>
+    ✅ 저장이 완료되었습니다!
+  </p>
+  <p style='font-size:1rem; color:#444; margin:0.3rem 0 0 0;'>
+    <b>{user_name}</b>님의 진단 이력에 저장되었습니다.<br>
+    사이드바의 <b>📋 진단 이력 보기</b>에서 확인하실 수 있습니다.
+  </p>
+</div>
+""", unsafe_allow_html=True)
         return
 
     with st.container(border=True):
@@ -946,11 +960,13 @@ def _render_history_save_ui():
                     if entry:
                         hist.save_entry(entry)
                     st.session_state._result_saved = True
+                    st.session_state._result_save_status = "saved"
                     st.rerun()
 
         with col_skip:
             if st.button("건너뛰기", use_container_width=True):
                 st.session_state._result_saved = True
+                st.session_state._result_save_status = "skipped"
                 st.rerun()
 
 
