@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import time
 from src import pages
 
 
@@ -99,6 +98,29 @@ def inject_responsive_css():
 </style>
 """, unsafe_allow_html=True)
 
+def render_scroll_notice():
+    """모바일에서만 표시되는 최상단 이동 안내."""
+    st.markdown("""
+<div class="scroll-notice">
+  📌 화면 상단으로 이동하려면 <b>상태바(시간 표시줄)</b>를 탭하세요.
+</div>
+<style>
+.scroll-notice {
+    display: none;
+    background: #f0f2f6;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.82rem;
+    color: #555;
+    margin-bottom: 0.8rem;
+}
+@media (max-width: 768px) {
+    .scroll-notice { display: block; }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 HOME_PAGE = "home"
 IMAGE_PAGE = "image"
 VIDEO_PAGE = "video"
@@ -109,46 +131,8 @@ RESULT_PAGE = "result"
 
 def router():
 
-    # requestAnimationFrame 반복으로 렌더 완료 후 최상단 스크롤 보장
-    components.html(f"""
-<script>
-(function() {{
-    var _ts = {time.time()};  // 캐시 방지용 고유값
-    var SELECTORS = [
-        '[data-testid="stAppViewContainer"]',
-        '[data-testid="stMainBlockContainer"]',
-        '.main',
-        'section.main'
-    ];
-    var MAX = 20;
-    var count = 0;
 
-    function doScroll() {{
-        try {{ window.parent.scrollTo(0, 0); }} catch(e) {{}}
-        try {{ window.parent.document.documentElement.scrollTop = 0; }} catch(e) {{}}
-        try {{ window.parent.document.body.scrollTop = 0; }} catch(e) {{}}
-        SELECTORS.forEach(function(sel) {{
-            try {{
-                var el = window.parent.document.querySelector(sel);
-                if (el) {{ el.scrollTop = 0; el.scrollTo && el.scrollTo(0, 0); }}
-            }} catch(e) {{}}
-        }});
-    }}
-
-    function loop() {{
-        doScroll();
-        count++;
-        if (count < MAX) requestAnimationFrame(loop);
-    }}
-
-    loop();
-}})();
-</script>
-<!-- ts:{time.time()} -->
-""", height=0)
-
-    # 최상단 앵커 — 브라우저가 페이지 시작점을 인식하도록
-    st.markdown('<a id="top" style="display:none"></a>', unsafe_allow_html=True)
+    render_scroll_notice()
 
     page = st.session_state.page
 
