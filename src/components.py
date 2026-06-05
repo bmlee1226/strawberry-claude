@@ -15,6 +15,47 @@ def inject_responsive_css():
 }
 
 /* ============================================================
+   Expander 강조 스타일
+   ============================================================ */
+
+/* 닫힌 상태 */
+[data-testid="stExpander"] {
+    border: 1.5px solid #d0d0d0 !important;
+    border-radius: 10px !important;
+    margin-bottom: 0.6rem !important;
+    overflow: hidden !important;
+}
+
+/* 헤더 영역 */
+[data-testid="stExpander"] summary {
+    background: #f7f8fa !important;
+    padding: 0.75rem 1rem !important;
+    font-weight: 600 !important;
+    font-size: 0.97rem !important;
+    color: #333 !important;
+    border-radius: 8px !important;
+}
+
+/* 호버 */
+[data-testid="stExpander"] summary:hover {
+    background: #eef0f5 !important;
+    color: #FF4B4B !important;
+}
+
+/* 열린 상태 — 상단 테두리 구분선 */
+[data-testid="stExpander"][open] summary {
+    border-bottom: 1px solid #e0e0e0 !important;
+    border-radius: 8px 8px 0 0 !important;
+    color: #FF4B4B !important;
+    background: #fff5f5 !important;
+}
+
+/* 내부 콘텐츠 패딩 */
+[data-testid="stExpander"] > div:last-child {
+    padding: 0.75rem 1rem !important;
+}
+
+/* ============================================================
    모바일 (768px 이하)
    ============================================================ */
 @media (max-width: 768px) {
