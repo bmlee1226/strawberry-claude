@@ -109,12 +109,37 @@ RESULT_PAGE = "result"
 
 def router():
 
-    # 매 렌더마다 고유값을 넣어 캐시 방지 → 항상 최상단으로 스크롤
-    components.html(
-        f"<script>window.parent.scrollTo({{top:0,behavior:'instant'}});</script>"
-        f"<!-- {time.time()} -->",
-        height=0,
-    )
+    # 매 렌더마다 고유값으로 캐시 방지 + 여러 스크롤 타깃을 모두 초기화
+    components.html(f"""
+<script>
+(function() {{
+    function scrollTop() {{
+        try {{ window.scrollTo(0, 0); }} catch(e) {{}}
+        try {{ window.parent.scrollTo(0, 0); }} catch(e) {{}}
+        try {{ document.documentElement.scrollTop = 0; }} catch(e) {{}}
+        try {{ document.body.scrollTop = 0; }} catch(e) {{}}
+        try {{ window.parent.document.documentElement.scrollTop = 0; }} catch(e) {{}}
+        try {{ window.parent.document.body.scrollTop = 0; }} catch(e) {{}}
+        var selectors = [
+            '.main',
+            '[data-testid="stAppViewContainer"]',
+            '[data-testid="stMainBlockContainer"]',
+            'section.main'
+        ];
+        selectors.forEach(function(sel) {{
+            try {{
+                var el = window.parent.document.querySelector(sel);
+                if (el) el.scrollTop = 0;
+            }} catch(e) {{}}
+        }});
+    }}
+    scrollTop();
+    setTimeout(scrollTop, 50);
+    setTimeout(scrollTop, 150);
+}})();
+</script>
+<!-- {time.time()} -->
+""", height=0)
 
     page = st.session_state.page
 
