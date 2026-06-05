@@ -172,6 +172,9 @@ def page_image():
     </div>
     """, unsafe_allow_html=True)
 
+    # 안내 문구 placeholder — 업로더 위에 위치해 스크롤 없이 바로 보임
+    notice = st.empty()
+
     colum1, colum2 = st.columns(2)
 
     with colum1:
@@ -190,7 +193,6 @@ def page_image():
         with st.container(border=True):
             st.markdown("#### 📷 카메라 촬영")
             st.caption("카메라로 직접 촬영합니다")
-            # st.camera_input은 facingMode를 지원하지 않으므로 JS로 후면 카메라 우선 설정
             components.html("""
 <script>
 (function() {
@@ -213,18 +215,17 @@ def page_image():
             st.caption("💡 흰가루병은 잎 뒷면, 잿빛곰팡이병은 과실 표면을 집중적으로 촬영하세요.")
 
     if uploaded_file:
-        file_type = uploaded_file.type
-        if "video" in file_type:
-            st.warning("🎥 동영상 파일이 업로드되었습니다.")
-            st.info("동영상 분석은 **동영상 분석** 또는 **실시간 촬영 분석** 페이지를 이용해주세요.")
-            col_v, col_r = st.columns(2)
-            with col_v:
-                if st.button("🎥 동영상 분석으로 이동", use_container_width=True, type="primary"):
-                    go_to("video")
-            with col_r:
-                if st.button("🔙 다시 업로드", use_container_width=True):
-                    st.session_state.img_upload_key = st.session_state.get("img_upload_key", 0) + 1
-                    st.rerun()
+        if "video" in uploaded_file.type:
+            with notice.container():
+                st.warning("🎥 동영상 파일이 업로드되었습니다. 동영상 분석 페이지를 이용해주세요.")
+                col_v, col_r = st.columns(2)
+                with col_v:
+                    if st.button("🎥 동영상 분석으로 이동", use_container_width=True, type="primary"):
+                        go_to("video")
+                with col_r:
+                    if st.button("🔙 다시 업로드", use_container_width=True):
+                        st.session_state.img_upload_key = st.session_state.get("img_upload_key", 0) + 1
+                        st.rerun()
         else:
             st.session_state.uploaded_file = uploaded_file
             st.success("✅ 이미지가 업로드되었습니다. AI 분석을 시작합니다...")
