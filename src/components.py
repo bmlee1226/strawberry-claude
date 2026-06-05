@@ -105,6 +105,41 @@ def inject_responsive_css():
 }
 
 /* ============================================================
+   고령 친화 — 큰 글씨·넓은 버튼
+   ============================================================ */
+.senior-step {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+.senior-step-num {
+    display: inline-block;
+    background: #FF4B4B;
+    color: white;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    text-align: center;
+    line-height: 2rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+.senior-tip {
+    background: #fffbe6;
+    border-left: 4px solid #f5c518;
+    border-radius: 0 8px 8px 0;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    margin-top: 0.8rem;
+    color: #555;
+}
+
+/* ============================================================
    모바일 (768px 이하)
    ============================================================ */
 @media (max-width: 768px) {

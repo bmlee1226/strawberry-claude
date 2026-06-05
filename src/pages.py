@@ -159,40 +159,44 @@ def page_home():
 
 def page_image():
 
-    st.title("🖼 이미지 병해충 분석")
+    st.title("📷 사진으로 진단하기")
+    st.markdown("<p style='font-size:1.15rem; color:#444;'>딸기 사진을 찍거나 올리면 AI가 병을 확인해 드립니다.</p>", unsafe_allow_html=True)
 
-    # 단계 표시
     st.markdown("""
-    <div class='step-bar' style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
-      <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>1 이미지 업로드</span>
-      <span style='color:#ccc;'>→</span>
-      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>2 AI 분석</span>
-      <span style='color:#ccc;'>→</span>
-      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>3 결과 확인</span>
-    </div>
-    """, unsafe_allow_html=True)
+<div class='senior-step'>
+  <span class='senior-step-num'>1</span> 아래 두 가지 방법 중 <b>하나</b>를 선택하세요.
+</div>
+<div class='senior-step'>
+  <span class='senior-step-num'>2</span> 사진을 올리거나 찍으면 <b>자동으로 분석이 시작</b>됩니다.
+</div>
+<div class='senior-step'>
+  <span class='senior-step-num'>3</span> 잠시 기다리면 결과를 알려드립니다.
+</div>
+<div class='senior-tip'>💡 딸기 잎이나 열매가 화면에 크게 나오도록 가까이서 찍으면 더 정확합니다.</div>
+""", unsafe_allow_html=True)
 
-    # 안내 문구 placeholder — 업로더 위에 위치해 스크롤 없이 바로 보임
+    st.divider()
+
     notice = st.empty()
 
-    colum1, colum2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with colum1:
+    with col1:
         with st.container(border=True):
-            st.markdown("#### 📁 파일 업로드")
-            st.caption("JPG · JPEG · PNG 지원 · 드래그&드롭 가능")
+            st.markdown("### 📁 사진 파일 올리기")
+            st.markdown("스마트폰 사진첩에서 사진을 선택하세요.")
             uploaded_file = st.file_uploader(
-                "이미지를 업로드하세요",
+                "사진 올리기",
                 type=["jpg", "jpeg", "png", "mp4", "avi", "mov"],
                 label_visibility="collapsed",
                 key=f"img_uploader_{st.session_state.get('img_upload_key', 0)}",
             )
-            st.caption("💡 딸기 잎·과실이 화면에 가득 찬 선명한 사진일수록 정확도가 높아집니다.")
+            st.caption("👆 위 버튼을 누르거나 사진을 끌어다 놓으세요.")
 
-    with colum2:
+    with col2:
         with st.container(border=True):
-            st.markdown("#### 📷 카메라 촬영")
-            st.caption("카메라로 직접 촬영합니다")
+            st.markdown("### 📸 지금 바로 찍기")
+            st.markdown("카메라로 딸기를 찍어주세요.")
             components.html("""
 <script>
 (function() {
@@ -209,31 +213,31 @@ def page_image():
 </script>
 """, height=0)
             camera_image = st.camera_input(
-                "사진 촬영",
+                "사진 찍기",
                 label_visibility="collapsed",
             )
-            st.caption("💡 흰가루병은 잎 뒷면, 잿빛곰팡이병은 과실 표면을 집중적으로 촬영하세요.")
+            st.caption("📷 화면 아래 동그란 버튼을 누르면 사진이 찍힙니다.")
 
     if uploaded_file:
         if "video" in uploaded_file.type:
             with notice.container():
-                st.warning("🎥 동영상 파일이 업로드되었습니다. 동영상 분석 페이지를 이용해주세요.")
+                st.warning("🎥 동영상 파일입니다. 동영상 분석 페이지를 이용해주세요.")
                 col_v, col_r = st.columns(2)
                 with col_v:
                     if st.button("🎥 동영상 분석으로 이동", use_container_width=True, type="primary"):
                         go_to("video")
                 with col_r:
-                    if st.button("🔙 다시 업로드", use_container_width=True):
+                    if st.button("🔙 다시 올리기", use_container_width=True):
                         st.session_state.img_upload_key = st.session_state.get("img_upload_key", 0) + 1
                         st.rerun()
         else:
             st.session_state.uploaded_file = uploaded_file
-            st.success("✅ 이미지가 업로드되었습니다. AI 분석을 시작합니다...")
+            st.success("✅ 사진이 올라갔습니다! 잠시만 기다려 주세요...")
             go_to_top("analysis")
 
     elif camera_image:
         st.session_state.uploaded_file = camera_image
-        st.success("✅ 사진이 촬영되었습니다. AI 분석을 시작합니다...")
+        st.success("✅ 사진을 찍었습니다! 잠시만 기다려 주세요...")
         go_to_top("analysis")
 
 def _render_video_analysis_options(video_path):
@@ -263,118 +267,124 @@ def _render_video_analysis_options(video_path):
 
     col1, col2 = st.columns(2)
 
+    st.markdown("<p style='font-size:1.1rem; font-weight:bold; margin-bottom:0.5rem;'>아래 두 가지 중 하나를 눌러주세요.</p>", unsafe_allow_html=True)
+
     with col1:
         with st.container(border=True):
-            st.markdown("### ⚡ 빠른 분석")
-            st.caption("1초당 1프레임 분석 · 빠른 확인용")
+            st.markdown("### ⚡ 빨리 확인하기")
+            st.markdown("결과를 빠르게 보고 싶을 때")
             st.divider()
             c1, c2 = st.columns(2)
-            c1.metric("분석 프레임", f"{int(videoinfo.duration)}장")
-            c2.metric("예상 소요", f"{fast_estimated_time:.0f}초")
-            st.markdown("""
-- 1초 간격으로 핵심 프레임만 분석
-- 긴 영상도 빠르게 확인 가능
-- 전체 구역 병해 분포 파악에 적합
-            """)
-            if st.button("⚡ 빠른 분석 시작", use_container_width=True, type="primary"):
+            c1.metric("소요 시간", f"약 {fast_estimated_time:.0f}초")
+            c2.metric("분석 장수", f"{int(videoinfo.duration)}장")
+            st.markdown("- 영상을 빠르게 훑어봅니다\n- 병해 여부를 빠르게 확인")
+            if st.button("⚡ 빨리 확인하기", use_container_width=True, type="primary"):
                 st.session_state.analysis_type = "fast"
                 go_to("analysis")
 
     with col2:
         with st.container(border=True):
-            st.markdown("### 🔬 정밀 분석")
-            st.caption("모든 프레임 분석 · 결과 영상 저장")
+            st.markdown("### 🔬 꼼꼼히 확인하기")
+            st.markdown("정확한 결과가 필요할 때")
             st.divider()
             c1, c2 = st.columns(2)
-            c1.metric("분석 프레임", f"{videoinfo.total_frames}장")
-            c2.metric("예상 소요", f"{precise_estimated_time:.0f}초")
-            st.markdown("""
-- 모든 프레임을 빠짐없이 분석
-- 탐지 결과가 표시된 MP4 저장
-- 정확한 진단이 필요할 때 추천
-            """)
-            if st.button("🔬 정밀 분석 시작", use_container_width=True, type="primary"):
+            c1.metric("소요 시간", f"약 {precise_estimated_time:.0f}초")
+            c2.metric("분석 장수", f"{videoinfo.total_frames}장")
+            st.markdown("- 영상 전체를 꼼꼼히 분석합니다\n- 결과 영상도 저장됩니다")
+            if st.button("🔬 꼼꼼히 확인하기", use_container_width=True, type="primary"):
                 st.session_state.analysis_type = "precise"
                 go_to("analysis")
 
 
 def page_video():
 
-    st.title("🎥 동영상 병해충 분석")
+    st.title("🎥 동영상으로 진단하기")
+    st.markdown("<p style='font-size:1.15rem; color:#444;'>딸기 동영상을 올리면 AI가 병을 확인해 드립니다.</p>", unsafe_allow_html=True)
 
-    # 실시간 촬영으로 넘어온 경우 — 업로더 없이 분석 옵션 바로 표시
+    # 실시간 촬영으로 넘어온 경우
     video_path = st.session_state.get("video_path")
     if video_path and isinstance(st.session_state.get("uploaded_file"), _MockVideoFile):
         st.success("✅ 촬영된 동영상이 준비되었습니다.")
         _render_video_analysis_options(video_path)
         return
 
-    # 단계 표시
     st.markdown("""
-    <div class='step-bar' style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
-      <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>1 동영상 업로드</span>
-      <span style='color:#ccc;'>→</span>
-      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>2 분석 방식 선택</span>
-      <span style='color:#ccc;'>→</span>
-      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>3 AI 분석</span>
-      <span style='color:#ccc;'>→</span>
-      <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>4 결과 확인</span>
-    </div>
-    """, unsafe_allow_html=True)
+<div class='senior-step'>
+  <span class='senior-step-num'>1</span> 아래 버튼을 눌러 <b>동영상 파일을 선택</b>하세요.
+</div>
+<div class='senior-step'>
+  <span class='senior-step-num'>2</span> 파일을 올리면 <b>분석 방법 선택 화면</b>이 나타납니다.
+</div>
+<div class='senior-step'>
+  <span class='senior-step-num'>3</span> <b>빠른 분석</b> 또는 <b>꼼꼼히 분석</b> 중 하나를 누르세요.
+</div>
+<div class='senior-tip'>💡 딸기 재배 구역을 천천히 움직이며 찍은 영상이 가장 좋습니다. (30초~3분 권장)</div>
+""", unsafe_allow_html=True)
+
+    st.divider()
 
     notice = st.empty()
 
     with st.container(border=True):
-        st.markdown("#### 📁 동영상 업로드")
-        st.caption("MP4 · AVI · MOV · JPG · PNG 지원 · 드래그&드롭 가능 · 권장 길이 30초~3분")
+        st.markdown("### 📁 동영상 파일 올리기")
+        st.markdown("스마트폰에서 찍은 동영상을 선택하세요.")
         uploaded_video_file = st.file_uploader(
-            "동영상을 업로드하세요",
+            "동영상 올리기",
             type=["mp4", "avi", "mov", "jpg", "jpeg", "png"],
             label_visibility="collapsed",
             key=f"vid_uploader_{st.session_state.get('vid_upload_key', 0)}",
         )
+        st.caption("👆 위 버튼을 누르면 파일을 선택할 수 있습니다.")
 
     if uploaded_video_file is not None:
 
         if "image" in uploaded_video_file.type:
             with notice.container():
-                st.warning("🖼 이미지 파일이 업로드되었습니다. 이미지 분석 페이지를 이용해주세요.")
+                st.warning("🖼 사진 파일입니다. 사진 분석 페이지를 이용해주세요.")
                 col_i, col_r = st.columns(2)
                 with col_i:
-                    if st.button("🖼 이미지 분석으로 이동", use_container_width=True, type="primary"):
+                    if st.button("📷 사진 분석으로 이동", use_container_width=True, type="primary"):
                         go_to("image")
                 with col_r:
-                    if st.button("🔙 다시 업로드", use_container_width=True):
+                    if st.button("🔙 다시 올리기", use_container_width=True):
                         st.session_state.vid_upload_key = st.session_state.get("vid_upload_key", 0) + 1
                         st.rerun()
         else:
             video_bytes = uploaded_video_file.read()
             st.session_state.uploaded_file = uploaded_video_file
-
-            st.success("✅ 동영상 업로드 완료")
-
+            st.success("✅ 동영상이 올라갔습니다! 아래에서 분석 방법을 선택해 주세요.")
             tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
             tfile.write(video_bytes)
             tfile.close()
-
             st.session_state.video_path = tfile.name
-
             _render_video_analysis_options(tfile.name)
 
 def page_realtime_video():
 
-    st.title("📹 실시간 동영상 촬영")
-    st.write("카메라로 딸기를 촬영한 뒤 **녹화 중지 및 분석**을 눌러 분석 방식을 선택하세요.")
+    st.title("📹 직접 찍어서 진단하기")
+    st.markdown("<p style='font-size:1.15rem; color:#444;'>카메라로 딸기를 찍으면 AI가 병을 확인해 드립니다.</p>", unsafe_allow_html=True)
 
-    st.info("⏳ **START** 버튼을 누른 후 카메라가 연결되기까지 약 5초 정도 소요될 수 있습니다. 잠시 기다려 주세요.")
+    st.markdown("""
+<div class='senior-step'>
+  <span class='senior-step-num'>1</span> 아래 <b>START</b> 버튼을 누르세요. <span style='color:#888; font-size:0.95rem;'>(카메라가 켜지는 데 5초 정도 걸립니다)</span>
+</div>
+<div class='senior-step'>
+  <span class='senior-step-num'>2</span> 카메라 화면이 나오면 딸기를 향해 들어주세요.
+</div>
+<div class='senior-step'>
+  <span class='senior-step-num'>3</span> 빨간 <b>🔴 녹화 시작</b> 버튼을 누르고, 딸기를 천천히 찍어주세요.
+</div>
+<div class='senior-step'>
+  <span class='senior-step-num'>4</span> 다 찍었으면 <b>⏹ 촬영 완료</b> 버튼을 누르세요.
+</div>
+<div class='senior-tip'>💡 카메라가 켜지지 않으면 아래 안내를 확인하세요.</div>
+""", unsafe_allow_html=True)
 
-    with st.expander("📷 카메라가 전면으로 나오거나 연결되지 않을 때  ▼ 탭하여 펼치기"):
+    with st.expander("📷 카메라가 켜지지 않거나 앞 카메라가 나올 때  ▼ 탭하여 펼치기"):
         st.markdown("""
-1. 브라우저 주소창 왼쪽 **자물쇠(🔒) 아이콘**을 클릭하세요.
-2. **카메라** 권한을 찾아 **재설정** 또는 **허용**으로 변경하세요.
-3. 페이지를 **새로고침(F5)** 한 뒤 다시 시도하세요.
-
-> 💡 권한을 재설정하면 브라우저가 후면 카메라를 다시 인식합니다.
+1. 화면 주소창 옆 **자물쇠(🔒) 아이콘**을 눌러주세요.
+2. **카메라** 항목을 찾아 **허용**으로 바꾸세요.
+3. 페이지를 **새로고침**해서 다시 시도하세요.
         """)
 
     class _VideoRecorder(VideoProcessorBase):
@@ -410,17 +420,17 @@ def page_realtime_video():
                 with ctx.video_processor._lock:
                     ctx.video_processor.frames = []
                 ctx.video_processor.recording = True
-                st.info("🔴 녹화 중입니다...")
+                st.info("🔴 녹화 중입니다. 딸기를 향해 카메라를 들어주세요.")
 
         with col2:
-            if st.button("⏹ 녹화 중지 및 분석", use_container_width=True):
+            if st.button("⏹ 촬영 완료", use_container_width=True):
                 ctx.video_processor.recording = False
 
                 with ctx.video_processor._lock:
                     frames = list(ctx.video_processor.frames)
 
                 if not frames:
-                    st.warning("녹화된 프레임이 없습니다. 먼저 녹화를 시작하세요.")
+                    st.warning("촬영된 영상이 없습니다. 먼저 🔴 녹화 시작을 눌러주세요.")
                 else:
                     h, w = frames[0].shape[:2]
                     tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
