@@ -245,6 +245,15 @@ def page_video():
 
     st.title("🎥 동영상 병해충 분석")
 
+    # 실시간 촬영으로 넘어온 경우 — 업로더 없이 분석 옵션 바로 표시
+    video_path = st.session_state.get("video_path")
+    if video_path and isinstance(st.session_state.get("uploaded_file"), _MockVideoFile):
+        st.success("✅ 촬영된 동영상이 준비되었습니다.")
+        with open(video_path, "rb") as f:
+            st.video(f.read())
+        _render_video_analysis_options(video_path)
+        return
+
     uploaded_video_file = st.file_uploader(
         "동영상을 업로드하세요",
         type=["mp4", "avi", "mov"]
@@ -328,8 +337,7 @@ def page_realtime_video():
                     st.session_state.analysis_result = None
                     st.session_state.analysis_type = None
 
-                    st.success(f"✅ 녹화 완료 ({len(frames)}프레임). 분석 방식을 선택하세요.")
-                    _render_video_analysis_options(tfile.name)
+                    go_to("video")
 
 
 def page_analysis():
