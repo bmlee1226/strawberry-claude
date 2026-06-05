@@ -109,37 +109,46 @@ RESULT_PAGE = "result"
 
 def router():
 
-    # 매 렌더마다 고유값으로 캐시 방지 + 여러 스크롤 타깃을 모두 초기화
+    # requestAnimationFrame 반복으로 렌더 완료 후 최상단 스크롤 보장
     components.html(f"""
 <script>
 (function() {{
-    function scrollTop() {{
-        try {{ window.scrollTo(0, 0); }} catch(e) {{}}
+    var _ts = {time.time()};  // 캐시 방지용 고유값
+    var SELECTORS = [
+        '[data-testid="stAppViewContainer"]',
+        '[data-testid="stMainBlockContainer"]',
+        '.main',
+        'section.main'
+    ];
+    var MAX = 20;
+    var count = 0;
+
+    function doScroll() {{
         try {{ window.parent.scrollTo(0, 0); }} catch(e) {{}}
-        try {{ document.documentElement.scrollTop = 0; }} catch(e) {{}}
-        try {{ document.body.scrollTop = 0; }} catch(e) {{}}
         try {{ window.parent.document.documentElement.scrollTop = 0; }} catch(e) {{}}
         try {{ window.parent.document.body.scrollTop = 0; }} catch(e) {{}}
-        var selectors = [
-            '.main',
-            '[data-testid="stAppViewContainer"]',
-            '[data-testid="stMainBlockContainer"]',
-            'section.main'
-        ];
-        selectors.forEach(function(sel) {{
+        SELECTORS.forEach(function(sel) {{
             try {{
                 var el = window.parent.document.querySelector(sel);
-                if (el) el.scrollTop = 0;
+                if (el) {{ el.scrollTop = 0; el.scrollTo && el.scrollTo(0, 0); }}
             }} catch(e) {{}}
         }});
     }}
-    scrollTop();
-    setTimeout(scrollTop, 50);
-    setTimeout(scrollTop, 150);
+
+    function loop() {{
+        doScroll();
+        count++;
+        if (count < MAX) requestAnimationFrame(loop);
+    }}
+
+    loop();
 }})();
 </script>
-<!-- {time.time()} -->
+<!-- ts:{time.time()} -->
 """, height=0)
+
+    # 최상단 앵커 — 브라우저가 페이지 시작점을 인식하도록
+    st.markdown('<a id="top" style="display:none"></a>', unsafe_allow_html=True)
 
     page = st.session_state.page
 
