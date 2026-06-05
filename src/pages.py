@@ -11,7 +11,6 @@ import io
 import zipfile
 import os
 import tempfile
-import time
 from datetime import datetime
 
 from src import process
@@ -205,28 +204,6 @@ def page_image():
         st.success("✅ 사진이 촬영되었습니다. AI 분석을 시작합니다...")
         go_to("analysis")
 
-@st.cache_data(show_spinner=False)
-def _measure_inference_fps(video_path: str) -> float:
-    """샘플 프레임으로 실제 추론 속도를 측정해 FPS를 반환한다."""
-    cap = cv2.VideoCapture(video_path)
-    ret, frame = cap.read()
-    cap.release()
-    if not ret:
-        return 5.0
-    # 워밍업 1회
-    model(frame, conf=0.3, verbose=False, imgsz=640)
-    # 실측 3회 평균
-    start = time.time()
-    N = 3
-    for _ in range(N):
-        model(frame, conf=0.3, verbose=False, imgsz=640)
-    single_frame_fps = N / max(time.time() - start, 0.001)
-    # 배치(8장) 처리 시 실제 처리량은 단일 추론보다 빠름 — 보수적으로 1.5배 적용
-    from src.process import PRECISE_BATCH_SIZE
-    batch_speedup = min(PRECISE_BATCH_SIZE * 0.5, 4.0)
-    return single_frame_fps * batch_speedup
-
-
 def _render_video_analysis_options(video_path):
     """영상 정보 표시 및 분석 방식 선택 UI (업로드/실시간 공용)."""
     videoinfo = utility.get_video_info(video_path)
@@ -241,10 +218,9 @@ def _render_video_analysis_options(video_path):
         st.metric("영상 길이", f"{videoinfo.duration:.1f}초")
 
     FAST_FPS = 15
-    with st.spinner("예상 소요 시간 측정 중..."):
-        precise_fps = _measure_inference_fps(video_path)
+    PRECISE_FPS = 5
     fast_estimated_time = int(videoinfo.duration) / FAST_FPS
-    precise_estimated_time = videoinfo.total_frames / precise_fps
+    precise_estimated_time = videoinfo.total_frames / PRECISE_FPS
 
     st.markdown("""
     <div style='display:flex; gap:0.5rem; align-items:center; margin: 1rem 0 0.5rem 0;'>
