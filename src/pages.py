@@ -1032,8 +1032,10 @@ def _render_share_ui(analysis_result, file_type: str):
                 img_pil = Image.fromarray(frame_rgb)
                 buf = _io.BytesIO()
                 img_pil.save(buf, format="PNG")
+                st.markdown("**🖼 이미지로 저장**")
+                st.caption("AI가 병해 위치를 표시한 탐지 이미지를 사진으로 저장합니다.")
                 st.download_button(
-                    label="🖼 이미지로 저장",
+                    label="⬇ 탐지 이미지 저장하기",
                     data=buf.getvalue(),
                     file_name=f"strawberry_{_dt.now().strftime('%Y%m%d_%H%M%S')}.png",
                     mime="image/png",
