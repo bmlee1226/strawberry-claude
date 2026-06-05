@@ -160,10 +160,32 @@ def init_session_state():
 
 def render_footer():
 
+    # 사이드바 — 홈 버튼 + 개발자 모드
+    with st.sidebar:
+        if st.session_state.get("page") != HOME_PAGE:
+            if st.button("🏠 처음으로", use_container_width=True):
+                # 임시 파일 정리
+                analysis_result = st.session_state.get("analysis_result")
+                if analysis_result:
+                    temp_output = getattr(analysis_result, "temp_output", None)
+                    if temp_output:
+                        import os
+                        if os.path.exists(temp_output):
+                            os.remove(temp_output)
+                video_path = st.session_state.get("video_path")
+                if video_path:
+                    import os
+                    if os.path.exists(video_path):
+                        os.remove(video_path)
+                st.session_state.uploaded_file = None
+                st.session_state.video_path = None
+                st.session_state.analysis_result = None
+                st.session_state.analysis_type = None
+                st.session_state.page = HOME_PAGE
+                st.rerun()
+        st.divider()
+
     pages._render_developer_sidebar()
 
     st.markdown("---")
-
-    st.caption(
-        "YOLO 기반 딸기 병해충 진단 시스템"
-    )
+    st.caption("YOLO 기반 딸기 병해충 진단 시스템")
