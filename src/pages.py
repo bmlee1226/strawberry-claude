@@ -444,7 +444,7 @@ def _save_training_image(uploaded_file, label: str) -> None:
     uploaded_file.seek(0)
     with open(save_path, "wb") as f:
         f.write(uploaded_file.read())
-    st.success(f"✅ [{label}] 라벨로 저장되었습니다.")
+    st.success("✅ 저장이 완료되었습니다. AI 성능 향상에 기여해 주셔서 감사합니다! 🍓")
 
 
 def _render_developer_data_viewer() -> None:
@@ -502,20 +502,20 @@ def _render_developer_data_viewer() -> None:
 def _render_developer_sidebar() -> None:
     with st.sidebar:
         st.divider()
-        st.subheader("🔐 개발자 모드")
         if st.session_state.get("is_developer"):
-            st.success("개발자 모드 활성화됨")
+            st.caption("🔐 개발자 모드 활성화됨")
             if st.button("로그아웃", use_container_width=True):
                 st.session_state.is_developer = False
                 st.rerun()
         else:
-            pw = st.text_input("비밀번호", type="password", key="dev_pw_input")
-            if st.button("로그인", use_container_width=True):
-                if pw == _DEVELOPER_PASSWORD:
-                    st.session_state.is_developer = True
-                    st.rerun()
-                else:
-                    st.error("비밀번호가 틀렸습니다.")
+            with st.expander(""):
+                pw = st.text_input("비밀번호", type="password", key="dev_pw_input", label_visibility="collapsed")
+                if st.button("확인", use_container_width=True):
+                    if pw == _DEVELOPER_PASSWORD:
+                        st.session_state.is_developer = True
+                        st.rerun()
+                    else:
+                        st.error("비밀번호가 틀렸습니다.")
 
 
 def page_result():
