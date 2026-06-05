@@ -327,6 +327,17 @@ def page_realtime_video():
     st.title("📹 실시간 동영상 촬영")
     st.write("카메라로 딸기를 촬영한 뒤 **녹화 중지 및 분석**을 눌러 분석 방식을 선택하세요.")
 
+    st.info("⏳ **START** 버튼을 누른 후 카메라가 연결되기까지 약 5초 정도 소요될 수 있습니다. 잠시 기다려 주세요.")
+
+    with st.expander("📷 카메라가 전면으로 나오거나 연결되지 않을 때"):
+        st.markdown("""
+1. 브라우저 주소창 왼쪽 **자물쇠(🔒) 아이콘**을 클릭하세요.
+2. **카메라** 권한을 찾아 **재설정** 또는 **허용**으로 변경하세요.
+3. 페이지를 **새로고침(F5)** 한 뒤 다시 시도하세요.
+
+> 💡 권한을 재설정하면 브라우저가 후면 카메라를 다시 인식합니다.
+        """)
+
     class _VideoRecorder(VideoProcessorBase):
         def __init__(self):
             self.recording = False
