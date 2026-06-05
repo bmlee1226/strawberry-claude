@@ -15,7 +15,37 @@ def inject_responsive_css():
 }
 
 /* ============================================================
-   Expander 강조 스타일
+   개발자 로그인 — 사이드바 expander 거의 안 보이게
+   ============================================================ */
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    margin-bottom: 0 !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+    background: transparent !important;
+    color: #ccc !important;
+    font-size: 0.72rem !important;
+    font-weight: 400 !important;
+    padding: 0.3rem 0.5rem !important;
+    letter-spacing: 0.1em !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
+    color: #999 !important;
+    background: transparent !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"][open] summary {
+    color: #999 !important;
+    background: transparent !important;
+    border-bottom: none !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] svg {
+    display: none !important;
+}
+
+/* ============================================================
+   Expander 강조 스타일 (메인 콘텐츠 전용)
    ============================================================ */
 
 /* 닫힌 상태 */

@@ -612,15 +612,16 @@ def _render_developer_data_viewer() -> None:
 
 def _render_developer_sidebar() -> None:
     with st.sidebar:
-        st.divider()
         if st.session_state.get("is_developer"):
+            st.divider()
             st.caption("🔐 개발자 모드 활성화됨")
             if st.button("로그아웃", use_container_width=True):
                 st.session_state.is_developer = False
                 st.rerun()
         else:
-            with st.expander(""):
-                pw = st.text_input("비밀번호", type="password", key="dev_pw_input", label_visibility="collapsed")
+            with st.expander("···"):
+                pw = st.text_input("비밀번호", type="password",
+                                   key="dev_pw_input", label_visibility="collapsed")
                 if st.button("확인", use_container_width=True):
                     if pw == _DEVELOPER_PASSWORD:
                         st.session_state.is_developer = True
