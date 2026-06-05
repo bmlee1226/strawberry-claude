@@ -889,14 +889,6 @@ def _render_video_result(analysis_result):
         with col_vid:
             st.markdown("#### 🎬 분석된 영상")
             st.video(analysis_result.final_output)
-            with open(analysis_result.final_output, "rb") as f:
-                st.download_button(
-                    label="⬇ 결과 영상 저장하기",
-                    data=f,
-                    file_name="result.mp4",
-                    mime="video/mp4",
-                    use_container_width=True,
-                )
         with col_info:
             st.markdown("#### 📊 분석 요약")
             sorted_counts = _render_video_detection_summary(analysis_result, compact=True)
@@ -1064,9 +1056,24 @@ def _render_share_ui(analysis_result, file_type: str):
                         key="btn_download_detected",
                     )
             else:
-                # 정밀 분석 — 결과 영상은 위에서 이미 제공
-                st.markdown("**🎥 동영상 저장**")
-                st.info("위쪽 **⬇ 결과 영상 저장하기** 버튼을 이용해 주세요.")
+                # 정밀 분석 — 결과 영상 다운로드 버튼
+                st.markdown("**🎥 결과 영상 저장하기**")
+                st.markdown("""
+<div class='senior-tip' style='font-size:0.95rem;'>
+  AI가 병해 위치를 표시한 결과 영상을 내 기기에 저장합니다.
+</div>
+""", unsafe_allow_html=True)
+                final_output = st.session_state.get("analysis_result").final_output
+                if final_output and os.path.exists(final_output):
+                    with open(final_output, "rb") as f:
+                        st.download_button(
+                            label="⬇ 결과 영상 저장하기",
+                            data=f,
+                            file_name=f"strawberry_{_dt.now().strftime('%Y%m%d_%H%M%S')}.mp4",
+                            mime="video/mp4",
+                            use_container_width=True,
+                            key="btn_download_precise_video",
+                        )
 
 
 def _render_training_save_ui(uploaded_file, analysis_result):
