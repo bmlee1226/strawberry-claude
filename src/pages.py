@@ -250,7 +250,7 @@ def _render_video_analysis_options(video_path):
     )
 
     FAST_FPS = 15
-    PRECISE_FPS = 5
+    PRECISE_FPS = 20
     fast_estimated_time = int(videoinfo.duration) / FAST_FPS
     precise_estimated_time = videoinfo.total_frames / PRECISE_FPS
 
