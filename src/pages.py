@@ -1008,30 +1008,14 @@ def _render_share_ui(analysis_result, file_type: str):
         st.markdown("### 📤 결과 저장 / 공유하기")
 
         summary = _build_summary(analysis_result, file_type)
-        # JS 문자열 안전 처리 (줄바꿈·따옴표 이스케이프)
-        js_safe = summary.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
 
         col_copy, col_img = st.columns(2)
 
-        # ---- 텍스트 복사 버튼 (클립보드 JS) ----
+        # ---- 텍스트 복사 (st.code 내장 복사 버튼 활용) ----
         with col_copy:
-            components.html(f"""
-<button onclick="
-  navigator.clipboard.writeText(\`{js_safe}\`)
-    .then(()=>{{
-      this.innerText='✅ 복사됨!';
-      this.style.background='#21c55d';
-      setTimeout(()=>{{this.innerText='📋 텍스트 복사';this.style.background='#FF4B4B';}},2000);
-    }})
-    .catch(()=>{{
-      prompt('아래 내용을 복사하세요', \`{js_safe}\`);
-    }});
-" style="
-  width:100%; padding:0.75rem; font-size:1rem; font-weight:bold;
-  background:#FF4B4B; color:white; border:none; border-radius:10px;
-  cursor:pointer;
-">📋 텍스트 복사</button>
-""", height=55)
+            st.markdown("**📋 텍스트 복사**")
+            st.caption("오른쪽 위 복사 아이콘을 누르세요")
+            st.code(summary, language=None)
 
         # ---- 이미지 저장 버튼 ----
         with col_img:
