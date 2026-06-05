@@ -47,56 +47,85 @@ model = load_model()
 
 
 def page_home():
-  st.title("🍓 딸기 병해충 진단 AI")
-  
+
+  # 예시 이미지 동일 크기 고정 CSS
   st.markdown("""
-  딸기 이미지를 업로드하면  
-  AI가 병해충을 탐지하고 원인 및 해결 방법을 안내합니다.
-  """)
-  
-  st.info("현재 지원: 흰가루병, 잿빛곰팡이병")
-  
-  st.warning("""
-  본 결과는 AI 예측이며
-  정확한 진단은 전문가 확인이 필요합니다.
-  """)
-  
-  st.subheader("예시 이미지")
-  
-  col_a, col_b, col_c = st.columns(3)
-  
-  with col_a:
-      st.image("gray_mold.png", use_container_width=True)
-  
-  with col_b:
-      st.image("powdery_mildew.jpg", use_container_width=True)
-  
-  with col_c:
-      st.image("healthy.png", use_container_width=True)
-  
+  <style>
+  .example-img-wrap img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 10px;
+  }
+  </style>
+  """, unsafe_allow_html=True)
+
+  # -----------------------------------
+  # 히어로 섹션
+  # -----------------------------------
+  st.markdown("""
+  <div style='text-align:center; padding: 2rem 0 1rem 0;'>
+    <h1>🍓 딸기 병해충 진단 AI</h1>
+    <p style='font-size:1.1rem; color:gray;'>
+      사진 또는 영상을 업로드하면 AI가 병해충을 탐지하고<br>원인과 해결 방법을 안내합니다.
+    </p>
+  </div>
+  """, unsafe_allow_html=True)
+
+  col_l, col_m, col_r = st.columns(3)
+  col_m.info("🌿 현재 지원 병해: **흰가루병**, **잿빛곰팡이병**")
+
+  st.caption("⚠️ 본 결과는 AI 예측이며, 정확한 진단은 전문가 확인이 필요합니다.")
+
+  # -----------------------------------
+  # 사이드바 설정
+  # -----------------------------------
   with st.sidebar:
-  
       st.header("⚙️ 설정")
-  
       st.divider()
-  
       conf_threshold = st.slider(
           "신뢰도 임계값 (Confidence Threshold)",
           min_value=0.1,
           max_value=1.0,
-          value=0.3,
+          value=st.session_state.get("conf_threshold", 0.3),
           step=0.05
       )
-  
-      st.caption("""
-          값이 낮을수록 더 많은 병해를 탐지하지만
-  오탐 가능성이 증가할 수 있습니다.
-          """)
-  
+      st.caption("값이 낮을수록 더 많은 병해를 탐지하지만 오탐 가능성이 증가할 수 있습니다.")
+
   st.session_state.conf_threshold = conf_threshold
-  
+
   st.divider()
 
+  # -----------------------------------
+  # 예시 이미지
+  # -----------------------------------
+  st.subheader("📷 병해 예시 이미지")
+
+  col_a, col_b, col_c = st.columns(3)
+
+  with col_a:
+      st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
+      st.image("gray_mold.png", use_container_width=True)
+      st.markdown('</div>', unsafe_allow_html=True)
+      st.caption("🔴 잿빛곰팡이병")
+
+  with col_b:
+      st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
+      st.image("powdery_mildew.jpg", use_container_width=True)
+      st.markdown('</div>', unsafe_allow_html=True)
+      st.caption("🟡 흰가루병")
+
+  with col_c:
+      st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
+      st.image("healthy.png", use_container_width=True)
+      st.markdown('</div>', unsafe_allow_html=True)
+      st.caption("🟢 정상")
+
+  st.divider()
+
+  # -----------------------------------
+  # 분석 방식 선택 카드
+  # -----------------------------------
   st.markdown(
       "<h3 style='text-align:center; margin-bottom: 0.2rem;'>📌 분석 방식을 선택하세요</h3>",
       unsafe_allow_html=True
@@ -108,10 +137,6 @@ def page_home():
 
   colum1, colum2, colum3 = st.columns(3)
 
-  # -----------------------------------
-  # 이미지 분석 카드
-  # -----------------------------------
-
   with colum1:
       with st.container(border=True):
           st.markdown("## 🖼️")
@@ -119,16 +144,8 @@ def page_home():
           st.write("딸기 사진을 업로드하거나 카메라로 촬영하면 AI가 즉시 병해충을 진단합니다.")
           st.caption("✅ 빠른 분석 · 사진 1장")
           st.markdown("<br>", unsafe_allow_html=True)
-          if st.button(
-              "👉 이미지 분석 시작하기",
-              use_container_width=True,
-              type="primary"
-          ):
+          if st.button("👉 이미지 분석 시작하기", use_container_width=True, type="primary"):
               go_to("image")
-
-  # -----------------------------------
-  # 동영상 분석 카드
-  # -----------------------------------
 
   with colum2:
       with st.container(border=True):
@@ -137,16 +154,8 @@ def page_home():
           st.write("딸기 재배 영상을 업로드하면 AI가 전체 구간에서 병해충을 탐지합니다.")
           st.caption("✅ 넓은 구역 탐지 · MP4/AVI/MOV")
           st.markdown("<br>", unsafe_allow_html=True)
-          if st.button(
-              "👉 동영상 분석 시작하기",
-              use_container_width=True,
-              type="primary"
-          ):
+          if st.button("👉 동영상 분석 시작하기", use_container_width=True, type="primary"):
               go_to("video")
-
-  # -----------------------------------
-  # 실시간 동영상 카드
-  # -----------------------------------
 
   with colum3:
       with st.container(border=True):
@@ -155,11 +164,7 @@ def page_home():
           st.write("카메라로 직접 딸기를 촬영하고 바로 병해충을 분석합니다.")
           st.caption("✅ 현장 즉시 촬영 · 빠른/정밀 분석")
           st.markdown("<br>", unsafe_allow_html=True)
-          if st.button(
-              "👉 실시간 촬영 시작하기",
-              use_container_width=True,
-              type="primary"
-          ):
+          if st.button("👉 실시간 촬영 시작하기", use_container_width=True, type="primary"):
               go_to("realtime_video")
 
 def page_image():
