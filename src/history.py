@@ -16,14 +16,12 @@ def save_entry(entry: dict) -> None:
 
 
 def load_all(user_name: str = "") -> list:
-    if not os.path.exists(_HISTORY_FILE):
+    if not user_name or not os.path.exists(_HISTORY_FILE):
         return []
     try:
         with open(_HISTORY_FILE, encoding="utf-8") as f:
             data = json.load(f)
-        if user_name:
-            data = [e for e in data if e.get("user_name") == user_name]
-        return data
+        return [e for e in data if e.get("user_name") == user_name]
     except Exception:
         return []
 
