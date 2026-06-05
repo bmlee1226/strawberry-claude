@@ -1,5 +1,58 @@
 import requests
 
+_DESC_KO = {
+    "Sunny": "맑음",
+    "Clear": "맑음",
+    "Partly cloudy": "구름 조금",
+    "Partly Cloudy": "구름 조금",
+    "Cloudy": "흐림",
+    "Overcast": "흐린",
+    "Mist": "안개",
+    "Fog": "짙은 안개",
+    "Freezing fog": "결빙 안개",
+    "Light drizzle": "가벼운 이슬비",
+    "Freezing drizzle": "얼어붙는 이슬비",
+    "Heavy freezing drizzle": "강한 얼어붙는 이슬비",
+    "Light rain": "가벼운 비",
+    "Moderate rain": "보통 비",
+    "Heavy rain": "강한 비",
+    "Light freezing rain": "가벼운 얼어붙는 비",
+    "Moderate or heavy freezing rain": "강한 얼어붙는 비",
+    "Light sleet": "가벼운 진눈깨비",
+    "Moderate or heavy sleet": "강한 진눈깨비",
+    "Light snow": "가벼운 눈",
+    "Moderate snow": "보통 눈",
+    "Heavy snow": "폭설",
+    "Ice pellets": "우박",
+    "Light rain shower": "가벼운 소나기",
+    "Moderate or heavy rain shower": "강한 소나기",
+    "Torrential rain shower": "폭우",
+    "Light sleet showers": "가벼운 진눈깨비 소나기",
+    "Moderate or heavy sleet showers": "강한 진눈깨비 소나기",
+    "Light snow showers": "가벼운 눈 소나기",
+    "Moderate or heavy snow showers": "강한 눈 소나기",
+    "Light showers of ice pellets": "가벼운 우박",
+    "Moderate or heavy showers of ice pellets": "강한 우박",
+    "Patchy rain possible": "간헐적 비 가능",
+    "Patchy snow possible": "간헐적 눈 가능",
+    "Blowing snow": "날리는 눈",
+    "Blizzard": "눈보라",
+    "Thundery outbreaks possible": "뇌우 가능",
+    "Patchy light drizzle": "간헐적 가벼운 이슬비",
+    "Patchy light rain": "간헐적 가벼운 비",
+    "Moderate rain at times": "때때로 보통 비",
+    "Heavy rain at times": "때때로 강한 비",
+    "Light rain with thunder": "천둥 동반 가벼운 비",
+    "Moderate or heavy rain with thunder": "천둥 동반 강한 비",
+    "Light snow with thunder": "천둥 동반 가벼운 눈",
+    "Moderate or heavy snow with thunder": "천둥 동반 강한 눈",
+}
+
+
+def _translate_desc(desc: str) -> str:
+    return _DESC_KO.get(desc, desc)
+
+
 _RISK_CONFIG = {
     "high":   {"icon": "🔴", "label": "위험",  "color": "#FF4B4B"},
     "medium": {"icon": "🟡", "label": "주의",  "color": "#f5a623"},
@@ -16,10 +69,11 @@ def get_weather(location: str) -> dict | None:
             return None
         data = resp.json()
         current = data["current_condition"][0]
+        desc_en = current["weatherDesc"][0]["value"]
         return {
             "temp_c":     int(current["temp_C"]),
             "humidity":   int(current["humidity"]),
-            "description": current["weatherDesc"][0]["value"],
+            "description": _translate_desc(desc_en),
             "feels_like": int(current["FeelsLikeC"]),
         }
     except Exception:
