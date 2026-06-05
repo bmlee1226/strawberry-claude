@@ -168,18 +168,37 @@ def page_home():
               go_to("realtime_video")
 
 def page_image():
-  
-  st.title("🖼 이미지 병해충 분석")
-  
-  colum1, colum2 = st.columns(2)
-  
-  with colum1:
-      
-      uploaded_file = st.file_uploader("이미지 업로드")
-  
-  with colum2:
-  
-      camera_image = st.camera_input("사진 촬영")
+
+    st.title("🖼 이미지 병해충 분석")
+
+    with st.expander("📖 업로드 방법 안내", expanded=False):
+        st.markdown("""
+**방법 1 — 파일 업로드**
+
+1. 왼쪽 **이미지 업로드** 영역을 클릭하거나 파일을 드래그&드롭 하세요.
+2. JPG, PNG, JPEG 형식의 딸기 이미지를 선택합니다.
+3. 업로드가 완료되면 자동으로 분석이 시작됩니다.
+
+> 💡 **좋은 이미지 조건**: 딸기 잎·과실이 화면 중앙에 가득 차도록 촬영, 밝은 조명, 초점이 선명한 사진일수록 정확도가 높아집니다.
+
+---
+
+**방법 2 — 카메라 직접 촬영**
+
+1. 오른쪽 **사진 촬영** 영역에서 카메라 접근을 허용합니다.
+2. 딸기를 화면에 맞게 조준한 뒤 촬영 버튼을 누릅니다.
+3. 촬영 즉시 자동으로 분석이 시작됩니다.
+
+> 💡 **촬영 팁**: 흰가루병은 잎 뒷면, 잿빛곰팡이병은 과실 표면을 집중적으로 촬영하세요.
+        """)
+
+    colum1, colum2 = st.columns(2)
+
+    with colum1:
+        uploaded_file = st.file_uploader("이미지 업로드", type=["jpg", "jpeg", "png"])
+
+    with colum2:
+        camera_image = st.camera_input("사진 촬영")
   
   if uploaded_file:
       st.session_state.uploaded_file = uploaded_file
@@ -260,6 +279,27 @@ def page_video():
             st.video(f.read())
         _render_video_analysis_options(video_path)
         return
+
+    with st.expander("📖 업로드 방법 안내", expanded=False):
+        st.markdown("""
+**업로드 방법**
+
+1. 아래 **동영상 업로드** 영역을 클릭하거나 파일을 드래그&드롭 하세요.
+2. MP4, AVI, MOV 형식을 지원합니다.
+3. 업로드가 완료되면 영상 정보와 함께 분석 방식 선택 화면이 나타납니다.
+
+---
+
+**분석 방식 선택 기준**
+
+| 분석 방식 | 특징 | 추천 상황 |
+|-----------|------|-----------|
+| ⚡ 빠른 분석 | 1초당 1프레임만 분석 | 영상이 길거나 빠르게 확인할 때 |
+| 🔬 정밀 분석 | 모든 프레임 분석 + 결과 영상 저장 | 정확한 진단이 필요할 때 |
+
+> 💡 **촬영 팁**: 딸기 재배 구역을 천천히 이동하며 촬영하면 탐지 정확도가 높아집니다.
+> 영상 길이는 **30초~3분** 내외를 권장합니다.
+        """)
 
     uploaded_video_file = st.file_uploader(
         "동영상을 업로드하세요",
