@@ -1015,6 +1015,7 @@ def _render_share_ui(analysis_result, file_type: str):
         # ---- 이미지 저장 ----
         with col_img:
             if "image" in file_type and analysis_result.result_list:
+                # 이미지 분석 — 탐지 이미지 1장 저장
                 dr = analysis_result.result_list[0]
                 frame_rgb = cv2.cvtColor(dr.annotated_frame, cv2.COLOR_BGR2RGB)
                 img_pil = Image.fromarray(frame_rgb)
@@ -1034,7 +1035,36 @@ def _render_share_ui(analysis_result, file_type: str):
                     use_container_width=True,
                     key="btn_download_img",
                 )
+            elif st.session_state.get("analysis_type") == "fast":
+                # 빠른 분석 — 병해 탐지된 프레임만 ZIP으로 저장
+                detected_frames = [r for r in analysis_result.result_list if r.detection]
+                st.markdown("**🖼 병해 발견 장면 저장하기**")
+                if not detected_frames:
+                    st.info("병해가 탐지된 장면이 없습니다.")
+                else:
+                    st.markdown(f"""
+<div class='senior-tip' style='font-size:0.95rem;'>
+  병해가 발견된 장면 <b>{len(detected_frames)}장</b>을 사진 파일로 저장합니다.
+</div>
+""", unsafe_allow_html=True)
+                    zip_buf = _io.BytesIO()
+                    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                        for i, r in enumerate(detected_frames, 1):
+                            frame_rgb = cv2.cvtColor(r.annotated_frame, cv2.COLOR_BGR2RGB)
+                            img_buf = _io.BytesIO()
+                            Image.fromarray(frame_rgb).save(img_buf, format="PNG")
+                            zf.writestr(f"detected_{i:03d}.png", img_buf.getvalue())
+                    zip_buf.seek(0)
+                    st.download_button(
+                        label=f"⬇ 탐지 장면 {len(detected_frames)}장 저장하기",
+                        data=zip_buf.getvalue(),
+                        file_name=f"strawberry_detected_{_dt.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                        mime="application/zip",
+                        use_container_width=True,
+                        key="btn_download_detected",
+                    )
             else:
+                # 정밀 분석 — 결과 영상은 위에서 이미 제공
                 st.markdown("**🎥 동영상 저장**")
                 st.info("위쪽 **⬇ 결과 영상 저장하기** 버튼을 이용해 주세요.")
 
