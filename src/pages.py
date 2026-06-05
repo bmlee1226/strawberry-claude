@@ -491,16 +491,16 @@ def _render_video_detection_summary(analysis_result, compact: bool = False):
     # ------- 요약 지표 -------
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("🎞 분석", f"{total_frames}프레임")
+        st.metric("🎞 전체 분석 장수", f"{total_frames}장")
     with col2:
-        st.metric("🦠 병해 탐지", f"{detected}프레임",
+        st.metric("🦠 병 발견 장수", f"{detected}장",
                   delta=f"{detected/total_frames*100:.1f}%" if total_frames else None,
                   delta_color="inverse")
     with col3:
-        st.metric("✅ 정상", f"{healthy}프레임")
+        st.metric("✅ 정상 장수", f"{healthy}장")
 
     if detected == 0:
-        st.success("병해충이 탐지되지 않았습니다.")
+        st.success("병해충이 발견되지 않았습니다.")
         return []
 
     st.divider()
@@ -652,7 +652,7 @@ def page_result():
         _render_video_result(analysis_result)
 
     st.divider()
-    if st.button("🔙 처음으로", use_container_width=True):
+    if st.button("🏠 처음 화면으로 돌아가기", use_container_width=True, type="primary"):
         temp_output = analysis_result.temp_output
         if temp_output and os.path.exists(temp_output):
             os.remove(temp_output)
@@ -670,46 +670,72 @@ def _render_image_result(uploaded_file, analysis_result):
     detection_result = analysis_result.result_list[0]
 
     # ------- 진단 결과 배너 -------
+    st.title("📋 진단 결과")
+
     if detection_result.detection:
         info = disease_info[detection_result.class_id]
-        st.error(f"### 🚨 {info['name']} 감지됨  |  신뢰도 {detection_result.conf:.0%}")
+        st.markdown(f"""
+<div style='background:#fff0f0; border:3px solid #FF4B4B; border-radius:14px;
+     padding:1.2rem 1.5rem; margin-bottom:1rem;'>
+  <p style='font-size:1.4rem; font-weight:bold; color:#cc0000; margin:0;'>
+    🚨 {info['name']} 이(가) 발견되었습니다
+  </p>
+  <p style='font-size:1rem; color:#666; margin:0.3rem 0 0 0;'>
+    AI 확신도: {detection_result.conf:.0%}
+  </p>
+</div>
+""", unsafe_allow_html=True)
     else:
-        st.success("### ✅ 병해충이 탐지되지 않았습니다. 현재 상태를 유지하세요.")
+        st.markdown("""
+<div style='background:#f0fff4; border:3px solid #21c55d; border-radius:14px;
+     padding:1.2rem 1.5rem; margin-bottom:1rem;'>
+  <p style='font-size:1.4rem; font-weight:bold; color:#166534; margin:0;'>
+    ✅ 건강한 딸기입니다!
+  </p>
+  <p style='font-size:1rem; color:#555; margin:0.3rem 0 0 0;'>
+    병해충이 발견되지 않았습니다. 지금처럼 잘 관리해 주세요.
+  </p>
+</div>
+""", unsafe_allow_html=True)
 
     # ------- 원본 vs 탐지 이미지 -------
+    st.markdown("#### 🔍 사진 비교")
     col_orig, col_det = st.columns(2)
     with col_orig:
-        st.caption("📷 업로드 원본")
+        st.caption("📷 올린 사진")
         uploaded_file.seek(0)
         st.image(uploaded_file.read(), use_container_width=True)
     with col_det:
-        st.caption("🔍 AI 탐지 결과")
+        st.caption("🤖 AI가 표시한 부분")
         st.image(detection_result.annotated_frame, channels="BGR", use_container_width=True)
 
     # ------- 신뢰도 게이지 -------
     if detection_result.detection:
-        st.markdown("**탐지 신뢰도**")
-        st.progress(detection_result.conf, text=f"{detection_result.conf:.0%}")
+        st.markdown(f"**AI 확신도: {detection_result.conf:.0%}** (높을수록 더 확실합니다)")
+        st.progress(detection_result.conf)
 
     # ------- 병해 상세 정보 (접기) -------
     if detection_result.detection:
-        with st.expander("📋 병해 상세 정보 보기  ▼ 탭하여 펼치기", expanded=False):
+        st.divider()
+        with st.expander("📖 이 병은 무엇인가요? (원인과 대처 방법 보기)  ▼ 탭하여 펼치기", expanded=False):
             utility.show_disease_info(detection_result.class_id)
 
     # ------- 피드백 & 학습 데이터 저장 -------
     st.divider()
     with st.container(border=True):
-        st.subheader("📦 AI 진단 피드백")
-        st.write("AI 진단 결과가 맞는지 확인하고, 올바른 라벨로 저장해 모델 개선에 기여하세요.")
+        st.markdown("### 💾 결과 저장하기")
+        st.markdown("AI 결과가 맞으면 저장해 주세요. 앞으로 더 잘 진단하는 데 도움이 됩니다.")
 
         LABEL_OPTIONS = ["정상", "흰가루병", "잿빛곰팡이병"]
         class_to_label = {0: "잿빛곰팡이병", 1: "흰가루병"}
         default_label = class_to_label.get(detection_result.class_id, "정상") if detection_result.detection else "정상"
 
-        col_sel, col_btn = st.columns([3, 1])
-        selected_label = col_sel.selectbox("실제 병해 라벨을 선택하세요", LABEL_OPTIONS, index=LABEL_OPTIONS.index(default_label))
-        col_btn.markdown("<br>", unsafe_allow_html=True)
-        if col_btn.button("💾 저장", use_container_width=True, type="primary"):
+        selected_label = st.selectbox(
+            "실제 상태를 선택해 주세요",
+            LABEL_OPTIONS,
+            index=LABEL_OPTIONS.index(default_label)
+        )
+        if st.button("💾 저장하기", use_container_width=True, type="primary"):
             _save_training_image(uploaded_file, selected_label)
 
     if st.session_state.get("is_developer"):
@@ -719,42 +745,68 @@ def _render_image_result(uploaded_file, analysis_result):
 def _render_video_result(analysis_result):
     analysis_type = st.session_state.analysis_type
 
+    st.title("📋 진단 결과")
+    detected = analysis_result.detection_frame_count
+
+    # ------- 최상단 결과 배너 -------
+    if detected == 0:
+        st.markdown("""
+<div style='background:#f0fff4; border:3px solid #21c55d; border-radius:14px;
+     padding:1.2rem 1.5rem; margin-bottom:1rem;'>
+  <p style='font-size:1.4rem; font-weight:bold; color:#166534; margin:0;'>
+    ✅ 건강한 딸기입니다!
+  </p>
+  <p style='font-size:1rem; color:#555; margin:0.3rem 0 0 0;'>
+    영상에서 병해충이 발견되지 않았습니다. 지금처럼 잘 관리해 주세요.
+  </p>
+</div>
+""", unsafe_allow_html=True)
+    else:
+        names = "·".join([disease_info[cid]["name"] for cid in analysis_result.detected_classes])
+        st.markdown(f"""
+<div style='background:#fff0f0; border:3px solid #FF4B4B; border-radius:14px;
+     padding:1.2rem 1.5rem; margin-bottom:1rem;'>
+  <p style='font-size:1.4rem; font-weight:bold; color:#cc0000; margin:0;'>
+    🚨 병해충이 발견되었습니다
+  </p>
+  <p style='font-size:1.05rem; color:#444; margin:0.4rem 0 0 0;'>
+    발견된 병: <b>{names}</b>
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
     if analysis_type == "precise":
-        # ------- 영상 + 탐지 요약 (2열) -------
         col_vid, col_info = st.columns([3, 2])
         with col_vid:
-            st.subheader("🎬 분석 결과 영상")
+            st.markdown("#### 🎬 분석된 영상")
             st.video(analysis_result.final_output)
             with open(analysis_result.final_output, "rb") as f:
                 st.download_button(
-                    label="⬇ 결과 영상 다운로드",
+                    label="⬇ 결과 영상 저장하기",
                     data=f,
                     file_name="result.mp4",
                     mime="video/mp4",
                     use_container_width=True,
                 )
         with col_info:
-            st.subheader("📊 탐지 요약")
+            st.markdown("#### 📊 분석 요약")
             sorted_counts = _render_video_detection_summary(analysis_result, compact=True)
 
-        # ------- 병해 상세 정보 (전체 너비) -------
         if sorted_counts:
             st.divider()
-            with st.expander("📋 병해 상세 정보 보기  ▼ 탭하여 펼치기", expanded=False):
+            with st.expander("📖 이 병은 무엇인가요? (원인과 대처 방법 보기)  ▼ 탭하여 펼치기", expanded=False):
                 for class_id, _ in sorted_counts:
                     utility.show_disease_info(class_id)
 
     elif analysis_type == "fast":
-        # ------- 탐지 요약 먼저 -------
         _render_video_detection_summary(analysis_result)
 
-        # ------- 프레임별 결과는 expander로 접기 -------
         detected_frames = [r for r in analysis_result.result_list if r.detection]
         total = len(analysis_result.result_list)
 
-        with st.expander(f"🖼 프레임별 탐지 이미지 보기 ({len(detected_frames)}/{total}프레임 탐지)  ▼ 탭하여 펼치기", expanded=False):
+        with st.expander(f"🖼 병해 발견된 장면 보기 ({len(detected_frames)}곳 발견)  ▼ 탭하여 펼치기", expanded=False):
             if not detected_frames:
-                st.info("탐지된 프레임이 없습니다.")
+                st.info("탐지된 장면이 없습니다.")
             else:
                 cols_per_row = 3
                 for i in range(0, len(detected_frames), cols_per_row):
@@ -763,7 +815,7 @@ def _render_video_result(analysis_result):
                     for col, r in zip(cols, row):
                         info = disease_info.get(r.class_id, {})
                         col.image(r.annotated_frame, channels="BGR", use_container_width=True)
-                        col.caption(f"{info.get('name','?')}  |  {r.conf:.0%}")
+                        col.caption(f"{info.get('name','?')}  확신도 {r.conf:.0%}")
   
       
 
