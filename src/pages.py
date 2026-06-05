@@ -180,7 +180,7 @@ def page_image():
             st.caption("JPG · JPEG · PNG 지원 · 드래그&드롭 가능")
             uploaded_file = st.file_uploader(
                 "이미지를 업로드하세요",
-                type=["jpg", "jpeg", "png"],
+                type=["jpg", "jpeg", "png", "mp4", "avi", "mov"],
                 label_visibility="collapsed",
             )
             st.caption("💡 딸기 잎·과실이 화면에 가득 찬 선명한 사진일수록 정확도가 높아집니다.")
@@ -212,9 +212,21 @@ def page_image():
             st.caption("💡 흰가루병은 잎 뒷면, 잿빛곰팡이병은 과실 표면을 집중적으로 촬영하세요.")
 
     if uploaded_file:
-        st.session_state.uploaded_file = uploaded_file
-        st.success("✅ 이미지가 업로드되었습니다. AI 분석을 시작합니다...")
-        go_to("analysis")
+        file_type = uploaded_file.type
+        if "video" in file_type:
+            st.warning("🎥 동영상 파일이 업로드되었습니다.")
+            st.info("동영상 분석은 **동영상 분석** 또는 **실시간 촬영 분석** 페이지를 이용해주세요.")
+            col_v, col_r = st.columns(2)
+            with col_v:
+                if st.button("🎥 동영상 분석으로 이동", use_container_width=True, type="primary"):
+                    go_to("video")
+            with col_r:
+                if st.button("🔙 다시 업로드", use_container_width=True):
+                    st.rerun()
+        else:
+            st.session_state.uploaded_file = uploaded_file
+            st.success("✅ 이미지가 업로드되었습니다. AI 분석을 시작합니다...")
+            go_to("analysis")
 
     elif camera_image:
         st.session_state.uploaded_file = camera_image
