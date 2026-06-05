@@ -91,30 +91,6 @@ def page_home():
     st.session_state.conf_threshold = conf_threshold
     st.divider()
 
-    # 예시 이미지
-    st.subheader("📷 병해 예시 이미지")
-    col_a, col_b, col_c = st.columns(3)
-
-    with col_a:
-        st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
-        st.image("gray_mold.png", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.caption("🔴 잿빛곰팡이병")
-
-    with col_b:
-        st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
-        st.image("powdery_mildew.jpg", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.caption("🟡 흰가루병")
-
-    with col_c:
-        st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
-        st.image("healthy.png", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.caption("🟢 정상")
-
-    st.divider()
-
     # 분석 방식 선택 카드
     st.markdown(
         "<h3 style='text-align:center; margin-bottom: 0.2rem;'>📌 분석 방식을 선택하세요</h3>",
@@ -156,6 +132,30 @@ def page_home():
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("👉 실시간 촬영 시작하기", use_container_width=True, type="primary"):
                 go_to("realtime_video")
+
+    st.divider()
+
+    # 예시 이미지
+    st.subheader("📷 병해 예시 이미지")
+    col_a, col_b, col_c = st.columns(3)
+
+    with col_a:
+        st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
+        st.image("gray_mold.png", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.caption("🔴 잿빛곰팡이병")
+
+    with col_b:
+        st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
+        st.image("powdery_mildew.jpg", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.caption("🟡 흰가루병")
+
+    with col_c:
+        st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
+        st.image("healthy.png", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.caption("🟢 정상")
 
 def page_image():
 
