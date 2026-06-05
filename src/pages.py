@@ -757,6 +757,8 @@ def page_result():
 
     _render_share_ui(analysis_result, file_type)
     _render_history_save_ui()
+    if "image" in file_type:
+        _render_training_save_ui(uploaded_file, analysis_result)
 
     st.divider()
     if st.button("🏠 처음 화면으로 돌아가기", use_container_width=True, type="primary"):
@@ -843,24 +845,6 @@ def _render_image_result(uploaded_file, analysis_result):
         st.divider()
         with st.expander("📖 이 병은 무엇인가요? (원인과 대처 방법 보기)  ▼ 탭하여 펼치기", expanded=False):
             utility.show_disease_info(detection_result.class_id)
-
-    # ------- 피드백 & 학습 데이터 저장 -------
-    st.divider()
-    with st.container(border=True):
-        st.markdown("### 💾 결과 저장하기")
-        st.markdown("AI 결과가 맞으면 저장해 주세요. 앞으로 더 잘 진단하는 데 도움이 됩니다.")
-
-        LABEL_OPTIONS = ["정상", "흰가루병", "잿빛곰팡이병"]
-        class_to_label = {0: "잿빛곰팡이병", 1: "흰가루병"}
-        default_label = class_to_label.get(detection_result.class_id, "정상") if detection_result.detection else "정상"
-
-        selected_label = st.selectbox(
-            "실제 상태를 선택해 주세요",
-            LABEL_OPTIONS,
-            index=LABEL_OPTIONS.index(default_label)
-        )
-        if st.button("💾 저장하기", use_container_width=True, type="primary", key="btn_training_save"):
-            _save_training_image(uploaded_file, selected_label)
 
     if st.session_state.get("is_developer"):
         _render_developer_data_viewer()
@@ -1045,6 +1029,31 @@ def _render_share_ui(analysis_result, file_type: str):
             else:
                 # 동영상은 결과 영상 다운로드가 이미 위에 있으므로 안내만 표시
                 st.info("동영상 결과는 위의\n⬇ 결과 영상 저장하기를\n이용해 주세요.", icon="ℹ️")
+
+
+def _render_training_save_ui(uploaded_file, analysis_result):
+    """AI 모델 학습용 데이터 저장 섹션 (이미지 전용)."""
+    detection_result = analysis_result.result_list[0]
+    LABEL_OPTIONS = ["정상", "흰가루병", "잿빛곰팡이병"]
+    class_to_label = {0: "잿빛곰팡이병", 1: "흰가루병"}
+    default_label = class_to_label.get(detection_result.class_id, "정상") if detection_result.detection else "정상"
+
+    st.divider()
+    with st.container(border=True):
+        st.markdown("### 🤖 AI 학습용 데이터 저장")
+        st.markdown(
+            "AI 진단 결과가 맞는지 확인하고 올바른 상태를 선택해 저장해 주세요.<br>"
+            "저장된 사진은 **AI 모델 학습에만** 사용되며, 앞으로 더 정확한 진단에 도움이 됩니다.",
+            unsafe_allow_html=True,
+        )
+        selected_label = st.selectbox(
+            "실제 상태를 선택해 주세요",
+            LABEL_OPTIONS,
+            index=LABEL_OPTIONS.index(default_label),
+            key="training_label_select",
+        )
+        if st.button("🤖 학습용으로 저장하기", use_container_width=True, key="btn_training_save"):
+            _save_training_image(uploaded_file, selected_label)
 
 
 def _render_history_save_ui():
