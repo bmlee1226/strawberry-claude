@@ -345,7 +345,10 @@ def page_realtime_video():
         mode=WebRtcMode.SENDRECV,
         rtc_configuration=_RTC_CONFIG,
         video_processor_factory=_VideoRecorder,
-        media_stream_constraints={"video": True, "audio": False},
+        media_stream_constraints={
+            "video": {"facingMode": {"ideal": "environment"}},
+            "audio": False,
+        },
         async_processing=True,
     )
 
