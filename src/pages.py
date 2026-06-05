@@ -518,7 +518,7 @@ def page_analysis():
                 analysis_result = process.process_precise_video(video_path, model, conf_threshold)
 
         st.session_state.analysis_result = analysis_result
-        st.session_state._result_saved = False
+        st.session_state._result_saved = False  # 새 진단마다 저장 상태 초기화
 
     go_to_top("result")
   
@@ -700,6 +700,8 @@ def page_result():
     elif "video" in file_type:
         _render_video_result(analysis_result)
 
+    _render_history_save_ui()
+
     st.divider()
     if st.button("🏠 처음 화면으로 돌아가기", use_container_width=True, type="primary"):
         temp_output = analysis_result.temp_output
@@ -718,15 +720,6 @@ def page_result():
 def _render_image_result(uploaded_file, analysis_result):
     detection_result = analysis_result.result_list[0]
 
-    # 이력 자동 저장 (중복 방지: 이미 저장된 결과면 건너뜀)
-    if not st.session_state.get("_result_saved"):
-        entry = hist.make_image_entry(
-            detection_result,
-            getattr(uploaded_file, "name", ""),
-            user_name=st.session_state.get("user_name", ""),
-        )
-        hist.save_entry(entry)
-        st.session_state._result_saved = True
 
     # ------- 진단 결과 배너 -------
     st.title("📋 진단 결과")
@@ -820,15 +813,6 @@ def _render_image_result(uploaded_file, analysis_result):
 def _render_video_result(analysis_result):
     analysis_type = st.session_state.analysis_type
 
-    # 이력 자동 저장
-    if not st.session_state.get("_result_saved"):
-        entry = hist.make_video_entry(
-            analysis_result,
-            analysis_type,
-            user_name=st.session_state.get("user_name", ""),
-        )
-        hist.save_entry(entry)
-        st.session_state._result_saved = True
 
     st.title("📋 진단 결과")
     detected = analysis_result.detection_frame_count
@@ -907,6 +891,67 @@ def _render_video_result(analysis_result):
 
 _RISK_COLOR = {"high": "#FF4B4B", "medium": "#f5a623", "none": "#21c55d"}
 _RISK_LABEL = {"high": "위험", "medium": "주의", "none": "정상"}
+
+
+def _render_history_save_ui():
+    """결과 페이지 하단 — 이력 저장 여부 질문 + 이름 입력."""
+    st.divider()
+
+    if st.session_state.get("_result_saved"):
+        st.success("✅ 진단 이력이 저장되었습니다.")
+        return
+
+    with st.container(border=True):
+        st.markdown("### 📋 진단 이력 저장하기")
+        st.markdown("이 진단 결과를 저장해 두시겠습니까?<br>이름을 입력하면 나중에 다시 확인할 수 있습니다.",
+                    unsafe_allow_html=True)
+
+        name = st.text_input(
+            "이름",
+            value=st.session_state.get("user_name", ""),
+            placeholder="예: 홍길동 / 행복농장",
+            label_visibility="collapsed",
+            key="history_save_name",
+        )
+
+        col_save, col_skip = st.columns(2)
+        with col_save:
+            if st.button("💾 저장하기", use_container_width=True, type="primary"):
+                if not name.strip():
+                    st.warning("이름을 입력해 주세요.")
+                else:
+                    st.session_state.user_name = name.strip()
+                    # 이미지 or 동영상 이력 생성
+                    uploaded_file = st.session_state.get("uploaded_file")
+                    analysis_result = st.session_state.get("analysis_result")
+                    analysis_type = st.session_state.get("analysis_type")
+                    file_type = getattr(uploaded_file, "type", "")
+
+                    if "image" in file_type and analysis_result:
+                        detection_result = analysis_result.result_list[0]
+                        entry = hist.make_image_entry(
+                            detection_result,
+                            getattr(uploaded_file, "name", ""),
+                            user_name=name.strip(),
+                        )
+                    elif analysis_result:
+                        entry = hist.make_video_entry(
+                            analysis_result,
+                            analysis_type or "",
+                            user_name=name.strip(),
+                        )
+                    else:
+                        entry = None
+
+                    if entry:
+                        hist.save_entry(entry)
+                    st.session_state._result_saved = True
+                    st.rerun()
+
+        with col_skip:
+            if st.button("건너뛰기", use_container_width=True):
+                st.session_state._result_saved = True
+                st.rerun()
 
 
 def page_history():

@@ -286,11 +286,6 @@ def router():
 
     render_scroll_notice()
 
-    # 이름 미입력 시 이름 입력 페이지로 강제 이동
-    if not st.session_state.get("user_name") and st.session_state.get("page") != NAME_PAGE:
-        st.session_state.page = NAME_PAGE
-        st.rerun()
-
     page = st.session_state.page
 
     if page == NAME_PAGE:
