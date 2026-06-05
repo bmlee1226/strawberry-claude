@@ -989,26 +989,30 @@ def _render_share_ui(analysis_result, file_type: str):
 
     st.divider()
     with st.container(border=True):
-        st.markdown("### 📤 결과 저장 / 공유하기")
+        st.markdown("### 📤 결과를 가족이나 전문가에게 알려주세요")
+        st.markdown("진단 결과를 문자나 카카오톡으로 공유하거나 사진으로 저장할 수 있습니다.")
 
         summary = _build_summary(analysis_result, file_type)
 
         col_copy, col_img = st.columns(2)
 
-        # ---- 텍스트 복사 (st.code 내장 복사 버튼 활용) ----
+        # ---- 텍스트 복사 ----
         with col_copy:
-            st.markdown("**📋 텍스트 복사**")
+            st.markdown("**📋 문자·카톡으로 보내기**")
             st.markdown("""
-<div style='background:#fff8e1; border:1.5px solid #f5c518; border-radius:8px;
-     padding:0.6rem 0.8rem; margin-bottom:0.5rem; font-size:0.95rem; color:#5a4000;'>
-  👇 아래 텍스트를 <b>한 번 클릭</b>하면<br>
-  오른쪽 위에 <b>복사 아이콘 📋</b>이 나타납니다.<br>
-  그 아이콘을 누르면 복사됩니다.
+<div class='senior-step' style='font-size:1rem;'>
+  <span class='senior-step-num'>1</span> 아래 글상자를 <b>한 번 눌러주세요</b>
+</div>
+<div class='senior-step' style='font-size:1rem;'>
+  <span class='senior-step-num'>2</span> 오른쪽 위 <b>복사 아이콘 📋</b>을 누르세요
+</div>
+<div class='senior-step' style='font-size:1rem;'>
+  <span class='senior-step-num'>3</span> 카톡·문자에 <b>붙여넣기</b>하면 됩니다
 </div>
 """, unsafe_allow_html=True)
             st.code(summary, language=None)
 
-        # ---- 이미지 저장 버튼 ----
+        # ---- 이미지 저장 ----
         with col_img:
             if "image" in file_type and analysis_result.result_list:
                 dr = analysis_result.result_list[0]
@@ -1016,10 +1020,14 @@ def _render_share_ui(analysis_result, file_type: str):
                 img_pil = Image.fromarray(frame_rgb)
                 buf = _io.BytesIO()
                 img_pil.save(buf, format="PNG")
-                st.markdown("**🖼 이미지로 저장**")
-                st.caption("AI가 병해 위치를 표시한 탐지 이미지를 사진으로 저장합니다.")
+                st.markdown("**🖼 사진으로 저장하기**")
+                st.markdown("""
+<div class='senior-tip' style='font-size:0.95rem;'>
+  AI가 병든 부위를 표시한 사진을 내 기기에 저장합니다.
+</div>
+""", unsafe_allow_html=True)
                 st.download_button(
-                    label="⬇ 탐지 이미지 저장하기",
+                    label="⬇ 사진 저장하기",
                     data=buf.getvalue(),
                     file_name=f"strawberry_{_dt.now().strftime('%Y%m%d_%H%M%S')}.png",
                     mime="image/png",
@@ -1027,8 +1035,8 @@ def _render_share_ui(analysis_result, file_type: str):
                     key="btn_download_img",
                 )
             else:
-                # 동영상은 결과 영상 다운로드가 이미 위에 있으므로 안내만 표시
-                st.info("동영상 결과는 위의\n⬇ 결과 영상 저장하기를\n이용해 주세요.", icon="ℹ️")
+                st.markdown("**🎥 동영상 저장**")
+                st.info("위쪽 **⬇ 결과 영상 저장하기** 버튼을 이용해 주세요.")
 
 
 def _render_training_save_ui(uploaded_file, analysis_result):
@@ -1040,19 +1048,24 @@ def _render_training_save_ui(uploaded_file, analysis_result):
 
     st.divider()
     with st.container(border=True):
-        st.markdown("### 🤖 AI 학습용 데이터 저장")
+        st.markdown("### 🤖 AI 가르치기")
         st.markdown(
-            "AI 진단 결과가 맞는지 확인하고 올바른 상태를 선택해 저장해 주세요.<br>"
-            "저장된 사진은 **AI 모델 학습에만** 사용되며, 앞으로 더 정확한 진단에 도움이 됩니다.",
+            "AI 진단이 맞았나요? 아래에서 실제 상태를 골라 저장해 주세요.<br>"
+            "이 사진은 **AI를 더 똑똑하게 만드는 데만** 쓰입니다. 다른 곳에는 사용되지 않아요.",
             unsafe_allow_html=True,
         )
+        st.markdown("""
+<div class='senior-tip'>
+  💡 AI 결과가 틀렸다면 올바른 상태로 바꿔서 저장해 주세요. 더 정확해집니다.
+</div>
+""", unsafe_allow_html=True)
         selected_label = st.selectbox(
             "실제 상태를 선택해 주세요",
             LABEL_OPTIONS,
             index=LABEL_OPTIONS.index(default_label),
             key="training_label_select",
         )
-        if st.button("🤖 학습용으로 저장하기", use_container_width=True, key="btn_training_save"):
+        if st.button("🤖 AI 가르치기 저장", use_container_width=True, key="btn_training_save"):
             _save_training_image(uploaded_file, selected_label)
 
 
@@ -1078,12 +1091,15 @@ def _render_history_save_ui():
         return
 
     with st.container(border=True):
-        st.markdown("### 📋 진단 이력 저장하기")
-        st.markdown("이 진단 결과를 저장해 두시겠습니까?<br>이름을 입력하면 나중에 다시 확인할 수 있습니다.",
-                    unsafe_allow_html=True)
+        st.markdown("### 📋 오늘 진단 기록 남기기")
+        st.markdown(
+            "이름을 입력하고 저장하면 **나중에 다시 확인**할 수 있습니다.<br>"
+            "사이드바의 <b>📋 진단 이력 보기</b>에서 언제든지 볼 수 있어요.",
+            unsafe_allow_html=True,
+        )
 
         name = st.text_input(
-            "이름",
+            "이름 또는 농장 이름",
             value=st.session_state.get("user_name", ""),
             placeholder="예: 홍길동 / 행복농장",
             label_visibility="collapsed",
@@ -1092,7 +1108,7 @@ def _render_history_save_ui():
 
         col_save, col_skip = st.columns(2)
         with col_save:
-            if st.button("💾 저장하기", use_container_width=True, type="primary", key="btn_history_save"):
+            if st.button("📋 기록 저장하기", use_container_width=True, type="primary", key="btn_history_save"):
                 if not name.strip():
                     st.warning("이름을 입력해 주세요.")
                 else:
@@ -1126,7 +1142,7 @@ def _render_history_save_ui():
                     st.rerun()
 
         with col_skip:
-            if st.button("건너뛰기", use_container_width=True):
+            if st.button("저장 안 함", use_container_width=True):
                 st.session_state._result_saved = True
                 st.session_state._result_save_status = "skipped"
                 st.rerun()
