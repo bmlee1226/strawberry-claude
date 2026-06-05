@@ -182,6 +182,7 @@ def page_image():
                 "이미지를 업로드하세요",
                 type=["jpg", "jpeg", "png", "mp4", "avi", "mov"],
                 label_visibility="collapsed",
+                key=f"img_uploader_{st.session_state.get('img_upload_key', 0)}",
             )
             st.caption("💡 딸기 잎·과실이 화면에 가득 찬 선명한 사진일수록 정확도가 높아집니다.")
 
@@ -222,6 +223,7 @@ def page_image():
                     go_to("video")
             with col_r:
                 if st.button("🔙 다시 업로드", use_container_width=True):
+                    st.session_state.img_upload_key = st.session_state.get("img_upload_key", 0) + 1
                     st.rerun()
         else:
             st.session_state.uploaded_file = uploaded_file
@@ -326,6 +328,7 @@ def page_video():
             "동영상을 업로드하세요",
             type=["mp4", "avi", "mov", "jpg", "jpeg", "png"],
             label_visibility="collapsed",
+            key=f"vid_uploader_{st.session_state.get('vid_upload_key', 0)}",
         )
 
     if uploaded_video_file is not None:
@@ -339,6 +342,7 @@ def page_video():
                     go_to("image")
             with col_r:
                 if st.button("🔙 다시 업로드", use_container_width=True):
+                    st.session_state.vid_upload_key = st.session_state.get("vid_upload_key", 0) + 1
                     st.rerun()
         else:
             video_bytes = uploaded_video_file.read()
