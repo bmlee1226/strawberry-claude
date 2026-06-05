@@ -1,10 +1,9 @@
 import streamlit as st
 from ultralytics import YOLO
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode, RTCConfiguration
+from PIL import Image
 
 import cv2
-import av
-import threading
+import numpy as np
 import os
 import tempfile
 from datetime import datetime
@@ -17,11 +16,6 @@ from src.disease_data import disease_info
 class _MockVideoFile:
     """실시간 촬영 후 분석 흐름에서 uploaded_file 역할을 대신하는 객체."""
     type = "video/mp4"
-
-
-_RTC_CONFIG = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-)
 
 @st.cache_resource
 def load_model():
@@ -255,64 +249,74 @@ def page_video():
 def page_realtime_video():
 
     st.title("📹 실시간 동영상 촬영")
-    st.write("카메라로 딸기를 촬영한 뒤 **녹화 중지 및 분석**을 눌러 분석 방식을 선택하세요.")
 
-    class _VideoRecorder(VideoProcessorBase):
-        def __init__(self):
-            self.recording = False
-            self.frames: list = []
-            self._lock = threading.Lock()
+    if "is_recording" not in st.session_state:
+        st.session_state.is_recording = False
+    if "recorded_frames" not in st.session_state:
+        st.session_state.recorded_frames = []
 
-        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-            img = frame.to_ndarray(format="bgr24")
-            with self._lock:
-                if self.recording:
-                    self.frames.append(img.copy())
-            return frame
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button(
+            "🔴 녹화 시작",
+            use_container_width=True,
+            type="primary",
+            disabled=st.session_state.is_recording,
+        ):
+            st.session_state.is_recording = True
+            st.session_state.recorded_frames = []
+            st.rerun()
 
-    ctx = webrtc_streamer(
-        key="realtime_recorder",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=_RTC_CONFIG,
-        video_processor_factory=_VideoRecorder,
-        media_stream_constraints={"video": True, "audio": False},
-    )
+    with col2:
+        if st.button(
+            "⏹ 녹화 중지 및 분석",
+            use_container_width=True,
+            disabled=not st.session_state.is_recording,
+        ):
+            st.session_state.is_recording = False
+            frames = st.session_state.recorded_frames
 
-    if ctx.video_processor:
-        col1, col2 = st.columns(2)
+            if not frames:
+                st.warning("캡처된 프레임이 없습니다. 녹화 시작 후 카메라 버튼을 눌러 촬영하세요.")
+            else:
+                h, w = frames[0].shape[:2]
+                tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+                tfile.close()
 
-        with col1:
-            if st.button("🔴 녹화 시작", use_container_width=True, type="primary"):
-                ctx.video_processor.recording = True
-                st.info("녹화 중입니다...")
+                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                out = cv2.VideoWriter(tfile.name, fourcc, 10.0, (w, h))
+                for f in frames:
+                    out.write(f)
+                out.release()
 
-        with col2:
-            if st.button("⏹ 녹화 중지 및 분석", use_container_width=True):
-                ctx.video_processor.recording = False
+                st.session_state.video_path = tfile.name
+                st.session_state.uploaded_file = _MockVideoFile()
+                st.session_state.analysis_result = None
+                st.session_state.analysis_type = None
+                st.session_state.recorded_frames = []
 
-                with ctx.video_processor._lock:
-                    frames = list(ctx.video_processor.frames)
+                st.success(f"✅ 촬영 완료 ({len(frames)}프레임). 분석 방식을 선택하세요.")
+                _render_video_analysis_options(tfile.name)
+            st.rerun()
 
-                if not frames:
-                    st.warning("녹화된 프레임이 없습니다. 먼저 녹화를 시작하세요.")
-                else:
-                    h, w = frames[0].shape[:2]
-                    tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-                    tfile.close()
+    if st.session_state.is_recording:
+        frame_count = len(st.session_state.recorded_frames)
+        st.info(f"🔴 녹화 중 — {frame_count}프레임 캡처됨. 카메라 버튼을 눌러 프레임을 추가하세요.")
 
-                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-                    out = cv2.VideoWriter(tfile.name, fourcc, 20.0, (w, h))
-                    for f in frames:
-                        out.write(f)
-                    out.release()
-
-                    st.session_state.video_path = tfile.name
-                    st.session_state.uploaded_file = _MockVideoFile()
-                    st.session_state.analysis_result = None
-                    st.session_state.analysis_type = None
-
-                    st.success(f"✅ 녹화 완료 ({len(frames)}프레임). 분석 방식을 선택하세요.")
-                    _render_video_analysis_options(tfile.name)
+        captured = st.camera_input(
+            "촬영",
+            key=f"cam_{frame_count}",
+            label_visibility="collapsed",
+        )
+        if captured:
+            img = Image.open(captured).convert("RGB")
+            img_bgr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+            st.session_state.recorded_frames.append(img_bgr)
+            st.rerun()
+    else:
+        if not st.session_state.get("video_path"):
+            st.info("**녹화 시작** 버튼을 누른 뒤 카메라 버튼을 반복해서 눌러 프레임을 촬영하세요.")
+            st.camera_input("카메라 미리보기", label_visibility="collapsed")
 
 
 def page_analysis():
