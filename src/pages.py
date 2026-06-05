@@ -126,7 +126,8 @@ def page_home():
         with st.container(border=True):
             st.markdown("<div style='font-size:2.5rem; text-align:center;'>📹</div>", unsafe_allow_html=True)
             st.markdown("<h3 style='text-align:center; margin:0.3rem 0;'>직접 찍어서 진단</h3>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align:center; color:#555; font-size:0.95rem;'>카메라로 지금 바로<br>딸기를 찍어주세요</p>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; color:#555; font-size:0.95rem;'>카메라로 딸기밭을 천천히<br>이동하며 촬영하면<br>넓은 범위를 한 번에 확인!</p>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; color:#e07000; font-size:0.88rem;'>🌿 밭 전체를 둘러보고 싶을 때 추천</p>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("📹 직접 찍어서 시작", use_container_width=True, type="primary"):
                 go_to("realtime_video")
@@ -363,17 +364,28 @@ def page_video():
 def page_realtime_video():
 
     st.title("📹 직접 찍어서 진단하기")
-    st.markdown("<p style='font-size:1.15rem; color:#444;'>카메라로 딸기를 찍으면 AI가 병을 확인해 드립니다.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:1.15rem; color:#444;'>카메라로 딸기밭을 천천히 이동하며 찍으면 <b>넓은 범위를 한 번에</b> 확인할 수 있습니다.</p>", unsafe_allow_html=True)
+
+    st.markdown("""
+<div style='background:#fff8e1; border:2px solid #f5c518; border-radius:12px;
+     padding:1rem 1.2rem; margin-bottom:1rem;'>
+  <p style='font-size:1.05rem; margin:0; color:#5a4000;'>
+    🌿 <b>이럴 때 사용하세요</b><br>
+    딸기 한 포기가 아닌 밭 전체를 확인하고 싶을 때,<br>
+    카메라를 들고 천천히 걸으면서 찍으면 AI가 병든 곳을 찾아드립니다.
+  </p>
+</div>
+""", unsafe_allow_html=True)
 
     st.markdown("""
 <div class='senior-step'>
   <span class='senior-step-num'>1</span> 아래 <b>START</b> 버튼을 누르세요. <span style='color:#888; font-size:0.95rem;'>(카메라가 켜지는 데 5초 정도 걸립니다)</span>
 </div>
 <div class='senior-step'>
-  <span class='senior-step-num'>2</span> 카메라 화면이 나오면 딸기를 향해 들어주세요.
+  <span class='senior-step-num'>2</span> 카메라 화면이 나오면 딸기밭을 향해 들어주세요.
 </div>
 <div class='senior-step'>
-  <span class='senior-step-num'>3</span> 빨간 <b>🔴 녹화 시작</b> 버튼을 누르고, 딸기를 천천히 찍어주세요.
+  <span class='senior-step-num'>3</span> 빨간 <b>🔴 녹화 시작</b> 버튼을 누르고, 딸기밭을 <b>천천히 걸으며</b> 찍어주세요.
 </div>
 <div class='senior-step'>
   <span class='senior-step-num'>4</span> 다 찍었으면 <b>⏹ 촬영 완료</b> 버튼을 누르세요.
