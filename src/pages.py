@@ -803,7 +803,7 @@ def _render_image_result(uploaded_file, analysis_result):
             LABEL_OPTIONS,
             index=LABEL_OPTIONS.index(default_label)
         )
-        if st.button("💾 저장하기", use_container_width=True, type="primary"):
+        if st.button("💾 저장하기", use_container_width=True, type="primary", key="btn_training_save"):
             _save_training_image(uploaded_file, selected_label)
 
     if st.session_state.get("is_developer"):
@@ -916,7 +916,7 @@ def _render_history_save_ui():
 
         col_save, col_skip = st.columns(2)
         with col_save:
-            if st.button("💾 저장하기", use_container_width=True, type="primary"):
+            if st.button("💾 저장하기", use_container_width=True, type="primary", key="btn_history_save"):
                 if not name.strip():
                     st.warning("이름을 입력해 주세요.")
                 else:
