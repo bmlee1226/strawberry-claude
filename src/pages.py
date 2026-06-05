@@ -17,6 +17,7 @@ from datetime import datetime
 from src import process
 from src import utility
 from src import history as hist
+from src import weather as wx
 from src.disease_data import disease_info
 
 
@@ -170,6 +171,59 @@ def page_home():
     st.divider()
 
     # 예시 이미지
+    # ------- 날씨 연동 병해 주의보 -------
+    st.markdown("<h3 style='text-align:center;'>🌤 오늘 우리 지역 병해 주의보</h3>", unsafe_allow_html=True)
+    with st.container(border=True):
+        col_loc, col_btn = st.columns([4, 1])
+        location = col_loc.text_input(
+            "지역",
+            value=st.session_state.get("weather_location", ""),
+            placeholder="예: 논산, Nonsan, Seoul",
+            label_visibility="collapsed",
+            key="weather_location_input",
+        )
+        fetch = col_btn.button("조회", use_container_width=True, key="btn_weather_fetch")
+
+        if fetch and location.strip():
+            st.session_state.weather_location = location.strip()
+            st.session_state.weather_data = None  # 캐시 초기화
+            st.rerun()
+
+        loc = st.session_state.get("weather_location", "")
+        if loc:
+            if st.session_state.get("weather_data") is None:
+                with st.spinner(f"{loc} 날씨 조회 중..."):
+                    st.session_state.weather_data = wx.get_weather(loc)
+
+            w = st.session_state.get("weather_data")
+            if w is None:
+                st.warning("날씨 정보를 가져오지 못했습니다. 지역명을 다시 확인해 주세요.")
+            else:
+                col_t, col_h, col_d = st.columns(3)
+                col_t.metric("🌡 기온", f"{w['temp_c']}°C")
+                col_h.metric("💧 습도", f"{w['humidity']}%")
+                col_d.metric("🌤 날씨", w['description'])
+
+                risks = wx.assess_disease_risk(w['temp_c'], w['humidity'])
+                if not risks:
+                    st.success("✅ 현재 날씨는 병해 발생 위험이 낮습니다.")
+                else:
+                    for r in risks:
+                        cfg = wx.risk_config(r["level"])
+                        st.markdown(f"""
+<div style='background:{"#fff0f0" if r["level"]=="high" else "#fffbe6" if r["level"]=="medium" else "#f0fff4"};
+     border-left:5px solid {cfg["color"]}; border-radius:0 10px 10px 0;
+     padding:0.8rem 1rem; margin:0.4rem 0;'>
+  <p style='font-size:1.05rem; font-weight:bold; color:{cfg["color"]}; margin:0;'>
+    {cfg["icon"]} {r["disease"]} — {cfg["label"]}
+  </p>
+  <p style='font-size:0.95rem; color:#444; margin:0.3rem 0 0 0;'>{r["reason"]}</p>
+</div>
+""", unsafe_allow_html=True)
+        else:
+            st.caption("지역명을 입력하고 조회 버튼을 누르면 오늘의 병해 주의보를 확인할 수 있습니다.")
+
+    st.divider()
     st.markdown("<h3 style='text-align:center;'>📷 이런 병이 있을 때 사용하세요</h3>", unsafe_allow_html=True)
     col_a, col_b, col_c = st.columns(3)
 
@@ -701,6 +755,7 @@ def page_result():
     elif "video" in file_type:
         _render_video_result(analysis_result)
 
+    _render_share_ui(analysis_result, file_type)
     _render_history_save_ui()
 
     st.divider()
@@ -892,6 +947,103 @@ def _render_video_result(analysis_result):
 
 _RISK_COLOR = {"high": "#FF4B4B", "medium": "#f5a623", "none": "#21c55d"}
 _RISK_LABEL = {"high": "위험", "medium": "주의", "none": "정상"}
+
+
+def _render_share_ui(analysis_result, file_type: str):
+    """진단 결과 공유/저장 섹션."""
+    from datetime import datetime as _dt
+    st.divider()
+    with st.container(border=True):
+        st.markdown("### 📤 결과 저장 / 공유하기")
+
+        user_name = st.session_state.get("user_name", "")
+        now = _dt.now().strftime("%Y년 %m월 %d일 %H:%M")
+
+        # ---- 텍스트 요약 ----
+        if "image" in file_type and analysis_result.result_list:
+            dr = analysis_result.result_list[0]
+            if dr.detection:
+                from src.disease_data import disease_info as _di
+                info = _di.get(dr.class_id, {})
+                name = info.get("name", "알 수 없음")
+                sol = "\n".join(f"  · {s}" for s in info.get("solution", [])[:3])
+                summary = (
+                    f"🍓 딸기 병 진단 결과\n"
+                    f"{'━'*24}\n"
+                    f"진단일: {now}\n"
+                    f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
+                    f"판정:  🚨 {name}\n"
+                    f"확신도: {dr.conf:.0%}\n\n"
+                    f"💊 해결책\n{sol}\n"
+                    f"{'━'*24}\n"
+                    f"YOLO 기반 딸기 병해충 진단 AI"
+                )
+            else:
+                summary = (
+                    f"🍓 딸기 병 진단 결과\n"
+                    f"{'━'*24}\n"
+                    f"진단일: {now}\n"
+                    f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
+                    f"판정:  ✅ 건강한 딸기\n"
+                    f"병해충이 발견되지 않았습니다.\n"
+                    f"{'━'*24}\n"
+                    f"YOLO 기반 딸기 병해충 진단 AI"
+                )
+
+            col_txt, col_img = st.columns(2)
+            with col_txt:
+                st.text_area(
+                    "📋 텍스트 요약 (길게 눌러 전체 복사)",
+                    value=summary,
+                    height=200,
+                    key="share_text_area",
+                    label_visibility="collapsed",
+                )
+            with col_img:
+                st.caption("🔍 AI 탐지 이미지 저장")
+                import cv2 as _cv2, numpy as _np
+                from PIL import Image as _Img
+                import io as _io
+                frame_bgr = dr.annotated_frame
+                frame_rgb = _cv2.cvtColor(frame_bgr, _cv2.COLOR_BGR2RGB)
+                img_pil = _Img.fromarray(frame_rgb)
+                buf = _io.BytesIO()
+                img_pil.save(buf, format="PNG")
+                st.download_button(
+                    label="⬇ 탐지 이미지 저장",
+                    data=buf.getvalue(),
+                    file_name=f"strawberry_diagnosis_{_dt.now().strftime('%Y%m%d_%H%M%S')}.png",
+                    mime="image/png",
+                    use_container_width=True,
+                    key="btn_download_image",
+                )
+
+        else:  # 동영상
+            names = "·".join([
+                __import__("src.disease_data", fromlist=["disease_info"])
+                .disease_info.get(cid, {}).get("name", "?")
+                for cid in analysis_result.detected_classes
+            ]) or "없음"
+            detected = analysis_result.detection_frame_count
+            atype = "꼼꼼히 분석" if st.session_state.get("analysis_type") == "precise" else "빠른 분석"
+            summary = (
+                f"🍓 딸기 동영상 진단 결과\n"
+                f"{'━'*24}\n"
+                f"진단일: {now}\n"
+                f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
+                f"분석 방식: {atype}\n"
+                f"판정: {'🚨 ' + names if detected > 0 else '✅ 건강한 딸기'}\n"
+                f"병 발견 장면: {detected}장\n"
+                f"{'━'*24}\n"
+                f"YOLO 기반 딸기 병해충 진단 AI"
+            )
+            st.text_area(
+                "📋 텍스트 요약 (길게 눌러 전체 복사)",
+                value=summary,
+                height=180,
+                key="share_text_area_video",
+                label_visibility="collapsed",
+            )
 
 
 def _render_history_save_ui():

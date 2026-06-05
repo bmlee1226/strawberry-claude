@@ -337,6 +337,8 @@ def init_session_state():
         "conf_threshold": 0.3,
         "is_developer": False,
         "user_name": "",
+        "weather_location": "",
+        "weather_data": None,
     }
 
     for key, value in defaults.items():
