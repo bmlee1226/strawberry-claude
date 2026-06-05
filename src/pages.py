@@ -949,101 +949,109 @@ _RISK_COLOR = {"high": "#FF4B4B", "medium": "#f5a623", "none": "#21c55d"}
 _RISK_LABEL = {"high": "위험", "medium": "주의", "none": "정상"}
 
 
-def _render_share_ui(analysis_result, file_type: str):
-    """진단 결과 공유/저장 섹션."""
+def _build_summary(analysis_result, file_type: str) -> str:
+    """공유용 텍스트 요약을 생성한다."""
     from datetime import datetime as _dt
+    user_name = st.session_state.get("user_name", "")
+    now = _dt.now().strftime("%Y년 %m월 %d일 %H:%M")
+    line = "━" * 24
+
+    if "image" in file_type and analysis_result.result_list:
+        dr = analysis_result.result_list[0]
+        if dr.detection:
+            info = disease_info.get(dr.class_id, {})
+            name = info.get("name", "알 수 없음")
+            sol = "\n".join(f"  · {s}" for s in info.get("solution", [])[:3])
+            return (
+                f"🍓 딸기 병 진단 결과\n{line}\n"
+                f"진단일: {now}\n"
+                f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
+                f"판정: 🚨 {name}\n"
+                f"확신도: {dr.conf:.0%}\n\n"
+                f"💊 해결책\n{sol}\n{line}\n"
+                f"YOLO 기반 딸기 병해충 진단 AI"
+            )
+        else:
+            return (
+                f"🍓 딸기 병 진단 결과\n{line}\n"
+                f"진단일: {now}\n"
+                f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
+                f"판정: ✅ 건강한 딸기\n"
+                f"병해충이 발견되지 않았습니다.\n{line}\n"
+                f"YOLO 기반 딸기 병해충 진단 AI"
+            )
+    else:
+        names = "·".join([
+            disease_info.get(cid, {}).get("name", "?")
+            for cid in analysis_result.detected_classes
+        ]) or "없음"
+        detected = analysis_result.detection_frame_count
+        atype = "꼼꼼히 분석" if st.session_state.get("analysis_type") == "precise" else "빠른 분석"
+        return (
+            f"🍓 딸기 동영상 진단 결과\n{line}\n"
+            f"진단일: {now}\n"
+            f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
+            f"분석 방식: {atype}\n"
+            f"판정: {'🚨 ' + names if detected > 0 else '✅ 건강한 딸기'}\n"
+            f"병 발견 장면: {detected}장\n{line}\n"
+            f"YOLO 기반 딸기 병해충 진단 AI"
+        )
+
+
+def _render_share_ui(analysis_result, file_type: str):
+    """진단 결과 저장/공유 — 텍스트 복사 버튼 + 이미지 저장 버튼."""
+    import io as _io
+    from datetime import datetime as _dt
+
     st.divider()
     with st.container(border=True):
         st.markdown("### 📤 결과 저장 / 공유하기")
 
-        user_name = st.session_state.get("user_name", "")
-        now = _dt.now().strftime("%Y년 %m월 %d일 %H:%M")
+        summary = _build_summary(analysis_result, file_type)
+        # JS 문자열 안전 처리 (줄바꿈·따옴표 이스케이프)
+        js_safe = summary.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
 
-        # ---- 텍스트 요약 ----
-        if "image" in file_type and analysis_result.result_list:
-            dr = analysis_result.result_list[0]
-            if dr.detection:
-                from src.disease_data import disease_info as _di
-                info = _di.get(dr.class_id, {})
-                name = info.get("name", "알 수 없음")
-                sol = "\n".join(f"  · {s}" for s in info.get("solution", [])[:3])
-                summary = (
-                    f"🍓 딸기 병 진단 결과\n"
-                    f"{'━'*24}\n"
-                    f"진단일: {now}\n"
-                    f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
-                    f"판정:  🚨 {name}\n"
-                    f"확신도: {dr.conf:.0%}\n\n"
-                    f"💊 해결책\n{sol}\n"
-                    f"{'━'*24}\n"
-                    f"YOLO 기반 딸기 병해충 진단 AI"
-                )
-            else:
-                summary = (
-                    f"🍓 딸기 병 진단 결과\n"
-                    f"{'━'*24}\n"
-                    f"진단일: {now}\n"
-                    f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
-                    f"판정:  ✅ 건강한 딸기\n"
-                    f"병해충이 발견되지 않았습니다.\n"
-                    f"{'━'*24}\n"
-                    f"YOLO 기반 딸기 병해충 진단 AI"
-                )
+        col_copy, col_img = st.columns(2)
 
-            col_txt, col_img = st.columns(2)
-            with col_txt:
-                st.text_area(
-                    "📋 텍스트 요약 (길게 눌러 전체 복사)",
-                    value=summary,
-                    height=200,
-                    key="share_text_area",
-                    label_visibility="collapsed",
-                )
-            with col_img:
-                st.caption("🔍 AI 탐지 이미지 저장")
-                import cv2 as _cv2, numpy as _np
-                from PIL import Image as _Img
-                import io as _io
-                frame_bgr = dr.annotated_frame
-                frame_rgb = _cv2.cvtColor(frame_bgr, _cv2.COLOR_BGR2RGB)
-                img_pil = _Img.fromarray(frame_rgb)
+        # ---- 텍스트 복사 버튼 (클립보드 JS) ----
+        with col_copy:
+            components.html(f"""
+<button onclick="
+  navigator.clipboard.writeText(\`{js_safe}\`)
+    .then(()=>{{
+      this.innerText='✅ 복사됨!';
+      this.style.background='#21c55d';
+      setTimeout(()=>{{this.innerText='📋 텍스트 복사';this.style.background='#FF4B4B';}},2000);
+    }})
+    .catch(()=>{{
+      prompt('아래 내용을 복사하세요', \`{js_safe}\`);
+    }});
+" style="
+  width:100%; padding:0.75rem; font-size:1rem; font-weight:bold;
+  background:#FF4B4B; color:white; border:none; border-radius:10px;
+  cursor:pointer;
+">📋 텍스트 복사</button>
+""", height=55)
+
+        # ---- 이미지 저장 버튼 ----
+        with col_img:
+            if "image" in file_type and analysis_result.result_list:
+                dr = analysis_result.result_list[0]
+                frame_rgb = cv2.cvtColor(dr.annotated_frame, cv2.COLOR_BGR2RGB)
+                img_pil = Image.fromarray(frame_rgb)
                 buf = _io.BytesIO()
                 img_pil.save(buf, format="PNG")
                 st.download_button(
-                    label="⬇ 탐지 이미지 저장",
+                    label="🖼 이미지로 저장",
                     data=buf.getvalue(),
-                    file_name=f"strawberry_diagnosis_{_dt.now().strftime('%Y%m%d_%H%M%S')}.png",
+                    file_name=f"strawberry_{_dt.now().strftime('%Y%m%d_%H%M%S')}.png",
                     mime="image/png",
                     use_container_width=True,
-                    key="btn_download_image",
+                    key="btn_download_img",
                 )
-
-        else:  # 동영상
-            names = "·".join([
-                __import__("src.disease_data", fromlist=["disease_info"])
-                .disease_info.get(cid, {}).get("name", "?")
-                for cid in analysis_result.detected_classes
-            ]) or "없음"
-            detected = analysis_result.detection_frame_count
-            atype = "꼼꼼히 분석" if st.session_state.get("analysis_type") == "precise" else "빠른 분석"
-            summary = (
-                f"🍓 딸기 동영상 진단 결과\n"
-                f"{'━'*24}\n"
-                f"진단일: {now}\n"
-                f"{'사용자: ' + user_name + chr(10) if user_name else ''}"
-                f"분석 방식: {atype}\n"
-                f"판정: {'🚨 ' + names if detected > 0 else '✅ 건강한 딸기'}\n"
-                f"병 발견 장면: {detected}장\n"
-                f"{'━'*24}\n"
-                f"YOLO 기반 딸기 병해충 진단 AI"
-            )
-            st.text_area(
-                "📋 텍스트 요약 (길게 눌러 전체 복사)",
-                value=summary,
-                height=180,
-                key="share_text_area_video",
-                label_visibility="collapsed",
-            )
+            else:
+                # 동영상은 결과 영상 다운로드가 이미 위에 있으므로 안내만 표시
+                st.info("동영상 결과는 위의\n⬇ 결과 영상 저장하기를\n이용해 주세요.", icon="ℹ️")
 
 
 def _render_history_save_ui():
