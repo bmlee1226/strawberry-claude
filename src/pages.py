@@ -13,6 +13,10 @@ import zipfile
 import os
 import tempfile
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+_KST = ZoneInfo("Asia/Seoul")
+def _now_kst(): return datetime.now(_KST)
 
 from src import process
 from src import utility
@@ -647,7 +651,7 @@ _LABEL_DIR_MAP = {
 def _save_training_image(uploaded_file, label: str) -> None:
     save_dir = os.path.join("user_uploads", _LABEL_DIR_MAP[label])
     os.makedirs(save_dir, exist_ok=True)
-    filename = datetime.now().strftime("%Y%m%d_%H%M%S.jpg")
+    filename = _now_kst().strftime("%Y%m%d_%H%M%S.jpg")
     save_path = os.path.join(save_dir, filename)
     uploaded_file.seek(0)
     with open(save_path, "wb") as f:
@@ -929,7 +933,7 @@ def _build_summary(analysis_result, file_type: str) -> str:
     """공유용 텍스트 요약을 생성한다."""
     from datetime import datetime as _dt
     user_name = st.session_state.get("user_name", "")
-    now = _dt.now().strftime("%Y년 %m월 %d일 %H:%M")
+    now = _now_kst().strftime("%Y년 %m월 %d일 %H:%M")
     line = "━" * 24
 
     if "image" in file_type and analysis_result.result_list:
@@ -1022,7 +1026,7 @@ def _render_share_ui(analysis_result, file_type: str):
                 st.download_button(
                     label="⬇ 사진 저장하기",
                     data=buf.getvalue(),
-                    file_name=f"strawberry_{_dt.now().strftime('%Y%m%d_%H%M%S')}.png",
+                    file_name=f"strawberry_{_now_kst().strftime('%Y%m%d_%H%M%S')}.png",
                     mime="image/png",
                     use_container_width=True,
                     key="btn_download_img",
@@ -1050,7 +1054,7 @@ def _render_share_ui(analysis_result, file_type: str):
                     st.download_button(
                         label=f"⬇ 탐지 장면 {len(detected_frames)}장 저장하기",
                         data=zip_buf.getvalue(),
-                        file_name=f"strawberry_detected_{_dt.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                        file_name=f"strawberry_detected_{_now_kst().strftime('%Y%m%d_%H%M%S')}.zip",
                         mime="application/zip",
                         use_container_width=True,
                         key="btn_download_detected",
@@ -1069,7 +1073,7 @@ def _render_share_ui(analysis_result, file_type: str):
                         st.download_button(
                             label="⬇ 결과 영상 저장하기",
                             data=f,
-                            file_name=f"strawberry_{_dt.now().strftime('%Y%m%d_%H%M%S')}.mp4",
+                            file_name=f"strawberry_{_now_kst().strftime('%Y%m%d_%H%M%S')}.mp4",
                             mime="video/mp4",
                             use_container_width=True,
                             key="btn_download_precise_video",

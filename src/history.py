@@ -1,6 +1,13 @@
 import json
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+_KST = ZoneInfo("Asia/Seoul")
+
+
+def _now_kst() -> datetime:
+    return datetime.now(_KST)
 
 _HISTORY_FILE = "history/history.json"
 _MAX_ENTRIES = 100
@@ -37,8 +44,8 @@ def make_image_entry(detection_result, file_name: str = "", user_name: str = "")
         risk = "none"
 
     return {
-        "id": datetime.now().strftime("%Y%m%d_%H%M%S"),
-        "date": datetime.now().strftime("%Y년 %m월 %d일 %H:%M"),
+        "id": _now_kst().strftime("%Y%m%d_%H%M%S"),
+        "date": _now_kst().strftime("%Y년 %m월 %d일 %H:%M"),
         "type": "image",
         "user_name": user_name,
         "detected": detection_result.detection,
@@ -56,8 +63,8 @@ def make_video_entry(analysis_result, analysis_type: str, user_name: str = "") -
         for cid in analysis_result.detected_classes
     ]
     return {
-        "id": datetime.now().strftime("%Y%m%d_%H%M%S"),
-        "date": datetime.now().strftime("%Y년 %m월 %d일 %H:%M"),
+        "id": _now_kst().strftime("%Y%m%d_%H%M%S"),
+        "date": _now_kst().strftime("%Y년 %m월 %d일 %H:%M"),
         "type": "video",
         "user_name": user_name,
         "analysis_type": analysis_type,
