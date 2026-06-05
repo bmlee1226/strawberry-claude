@@ -485,29 +485,29 @@ def _render_video_detection_summary(analysis_result, compact: bool = False):
 
     if not compact:
         st.divider()
-        st.header("📊 병해충 탐지 결과")
+        st.header("📊 분석 결과")
 
-    st.caption(f"신뢰도 임계값: {analysis_result.conf_threshold}")
+    st.caption(f"민감도 설정값: {analysis_result.conf_threshold}")
 
     # ------- 요약 지표 -------
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("🎞 전체 분석 장수", f"{total_frames}장")
+        st.metric("🎞 살펴본 장면 수", f"{total_frames}장")
     with col2:
-        st.metric("🦠 병 발견 장수", f"{detected}장",
+        st.metric("🦠 병 발견 장면", f"{detected}장",
                   delta=f"{detected/total_frames*100:.1f}%" if total_frames else None,
                   delta_color="inverse")
     with col3:
-        st.metric("✅ 정상 장수", f"{healthy}장")
+        st.metric("✅ 이상 없는 장면", f"{healthy}장")
 
     if detected == 0:
-        st.success("병해충이 발견되지 않았습니다.")
+        st.success("병이 발견되지 않았습니다.")
         return []
 
     st.divider()
 
     # ------- 클래스별 탐지 비율 카드 -------
-    st.markdown("**클래스별 탐지 현황**")
+    st.markdown("**어떤 병이 얼마나 발견됐나요?**")
     counts = analysis_result.detected_class_counts
     sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
 
@@ -517,15 +517,15 @@ def _render_video_detection_summary(analysis_result, compact: bool = False):
         ratio = count / total_frames * 100 if total_frames else 0
         with col:
             with st.container(border=True):
-                st.markdown(f"### {count}프레임")
+                st.markdown(f"### {count}장 발견")
                 st.write(f"**{name}**")
                 st.progress(ratio / 100)
-                st.caption(f"전체의 {ratio:.1f}%")
+                st.caption(f"전체 장면의 {ratio:.1f}% 에서 발견됨")
 
     # ------- 병해 상세 정보 (compact 모드에서는 생략 — 호출부에서 별도 렌더링) -------
     if not compact:
         st.divider()
-        with st.expander("📋 병해 상세 정보 보기  ▼ 탭하여 펼치기", expanded=False):
+        with st.expander("📖 이 병은 무엇인가요? (원인과 대처 방법 보기)  ▼ 탭하여 펼치기", expanded=False):
             for class_id, _ in sorted_counts:
                 utility.show_disease_info(class_id)
 
