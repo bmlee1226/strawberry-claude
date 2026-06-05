@@ -349,6 +349,59 @@ def page_analysis():
   go_to("result")
   
 
+def _render_video_detection_summary(analysis_result):
+    """동영상 분석 결과 요약 카드를 렌더링한다."""
+
+    st.divider()
+    st.header("📊 병해충 탐지 결과")
+    st.caption(f"신뢰도 임계값: {analysis_result.conf_threshold}")
+
+    total_frames = len(analysis_result.result_list) or analysis_result.detection_frame_count
+    detected = analysis_result.detection_frame_count
+    healthy = total_frames - detected if total_frames else 0
+
+    # ------- 상단 요약 지표 -------
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("🎞 분석 프레임", f"{total_frames}프레임")
+    with col2:
+        st.metric("🦠 병해 탐지 프레임", f"{detected}프레임",
+                  delta=f"{detected/total_frames*100:.1f}%" if total_frames else None,
+                  delta_color="inverse")
+    with col3:
+        st.metric("✅ 정상 프레임", f"{healthy}프레임")
+
+    st.divider()
+
+    if detected == 0:
+        st.success("✅ 병해충이 탐지되지 않았습니다. 현재 상태를 유지하세요.")
+        return
+
+    # ------- 클래스별 탐지 비율 카드 -------
+    st.subheader("🔍 클래스별 탐지 현황")
+
+    counts = analysis_result.detected_class_counts
+    sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+
+    cols = st.columns(len(sorted_counts))
+    for col, (class_id, count) in zip(cols, sorted_counts):
+        name = disease_info[class_id]["name"]
+        ratio = count / total_frames * 100 if total_frames else 0
+        with col:
+            with st.container(border=True):
+                st.markdown(f"### {count}프레임")
+                st.write(f"**{name}**")
+                st.progress(ratio / 100)
+                st.caption(f"전체의 {ratio:.1f}%")
+
+    st.divider()
+
+    # ------- 병해 상세 정보 -------
+    st.subheader("📋 병해 상세 정보")
+    for class_id, _ in sorted_counts:
+        utility.show_disease_info(class_id)
+
+
 def page_result():
 
     uploaded_file = st.session_state.uploaded_file
@@ -401,73 +454,20 @@ def page_result():
     elif "video" in file_type:
         if st.session_state.analysis_type == "fast":
             result_list = analysis_result.result_list
-            
             for detection_result in result_list:
                 utility.render_detection_result(detection_result)
-            
-            # -----------------------------------
-            # 결과 출력
-            # -----------------------------------
-            
-            st.header("📊 병해충 탐지 결과")
-            
-            st.info(
-            f"현재 신뢰도 임계값 (Confidence Threshold): {analysis_result.conf_threshold}"
-            )
-            
-            if analysis_result.detection_frame_count == 0:
 
-              st.success("✅ 병해충이 탐지되지 않았습니다.")
-
-            else:
-              st.subheader("클래스별 탐지 프레임 수")
-              for class_id, count in analysis_result.detected_class_counts.items():
-                  name = disease_info[class_id]["name"]
-                  st.metric(name, f"{count}프레임")
-              for class_id in analysis_result.detected_classes:
-                  utility.show_disease_info(class_id)
-                  
         elif st.session_state.analysis_type == "precise":
-          
-          
-          # -----------------------------
-          # 결과 영상 표시
-          # -----------------------------
-          st.video(analysis_result.final_output)
-          
-          # -----------------------------
-          # 다운로드 버튼
-          # -----------------------------
-          with open(analysis_result.final_output, "rb") as file:
-              st.download_button(
-                  label="결과 영상 다운로드",
-                  data=file,
-                  file_name="result.mp4",
-                  mime="video/mp4"
-              )
-          
-          
-          # -----------------------------------
-          # 결과 출력
-          # -----------------------------------
-          
-          st.header("📊 병해충 탐지 결과")
-          
-          st.info(
-          f"현재 신뢰도 임계값 (Confidence Threshold): {analysis_result.conf_threshold}"
-          )
-          
-          if analysis_result.detection_frame_count == 0:
+            st.video(analysis_result.final_output)
+            with open(analysis_result.final_output, "rb") as file:
+                st.download_button(
+                    label="결과 영상 다운로드",
+                    data=file,
+                    file_name="result.mp4",
+                    mime="video/mp4"
+                )
 
-              st.success("✅ 병해충이 탐지되지 않았습니다.")
-
-          else:
-              st.subheader("클래스별 탐지 프레임 수")
-              for class_id, count in analysis_result.detected_class_counts.items():
-                  name = disease_info[class_id]["name"]
-                  st.metric(name, f"{count}프레임")
-              for class_id in analysis_result.detected_classes:
-                  utility.show_disease_info(class_id)
+        _render_video_detection_summary(analysis_result)
         
     if st.button("🔙 처음으로"):
 
