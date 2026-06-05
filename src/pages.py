@@ -368,7 +368,7 @@ def page_realtime_video():
 
     st.info("⏳ **START** 버튼을 누른 후 카메라가 연결되기까지 약 5초 정도 소요될 수 있습니다. 잠시 기다려 주세요.")
 
-    with st.expander("📷 카메라가 전면으로 나오거나 연결되지 않을 때"):
+    with st.expander("📷 카메라가 전면으로 나오거나 연결되지 않을 때  ▼ 탭하여 펼치기"):
         st.markdown("""
 1. 브라우저 주소창 왼쪽 **자물쇠(🔒) 아이콘**을 클릭하세요.
 2. **카메라** 권한을 찾아 **재설정** 또는 **허용**으로 변경하세요.
@@ -514,7 +514,7 @@ def _render_video_detection_summary(analysis_result, compact: bool = False):
     # ------- 병해 상세 정보 (compact 모드에서는 생략 — 호출부에서 별도 렌더링) -------
     if not compact:
         st.divider()
-        with st.expander("📋 병해 상세 정보 보기", expanded=False):
+        with st.expander("📋 병해 상세 정보 보기  ▼ 탭하여 펼치기", expanded=False):
             for class_id, _ in sorted_counts:
                 utility.show_disease_info(class_id)
 
@@ -682,7 +682,7 @@ def _render_image_result(uploaded_file, analysis_result):
 
     # ------- 병해 상세 정보 (접기) -------
     if detection_result.detection:
-        with st.expander("📋 병해 상세 정보 보기", expanded=False):
+        with st.expander("📋 병해 상세 정보 보기  ▼ 탭하여 펼치기", expanded=False):
             utility.show_disease_info(detection_result.class_id)
 
     # ------- 피드백 & 학습 데이터 저장 -------
@@ -729,7 +729,7 @@ def _render_video_result(analysis_result):
         # ------- 병해 상세 정보 (전체 너비) -------
         if sorted_counts:
             st.divider()
-            with st.expander("📋 병해 상세 정보 보기", expanded=False):
+            with st.expander("📋 병해 상세 정보 보기  ▼ 탭하여 펼치기", expanded=False):
                 for class_id, _ in sorted_counts:
                     utility.show_disease_info(class_id)
 
@@ -741,7 +741,7 @@ def _render_video_result(analysis_result):
         detected_frames = [r for r in analysis_result.result_list if r.detection]
         total = len(analysis_result.result_list)
 
-        with st.expander(f"🖼 프레임별 탐지 이미지 보기 ({len(detected_frames)}/{total}프레임 탐지)", expanded=False):
+        with st.expander(f"🖼 프레임별 탐지 이미지 보기 ({len(detected_frames)}/{total}프레임 탐지)  ▼ 탭하여 펼치기", expanded=False):
             if not detected_frames:
                 st.info("탐지된 프레임이 없습니다.")
             else:

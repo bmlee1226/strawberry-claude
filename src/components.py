@@ -20,39 +20,58 @@ def inject_responsive_css():
 
 /* 닫힌 상태 */
 [data-testid="stExpander"] {
-    border: 1.5px solid #d0d0d0 !important;
+    border: 2px solid #c8cdd6 !important;
     border-radius: 10px !important;
-    margin-bottom: 0.6rem !important;
+    margin-bottom: 0.8rem !important;
     overflow: hidden !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+    transition: box-shadow 0.2s !important;
 }
 
 /* 헤더 영역 */
 [data-testid="stExpander"] summary {
-    background: #f7f8fa !important;
-    padding: 0.75rem 1rem !important;
-    font-weight: 600 !important;
-    font-size: 0.97rem !important;
-    color: #333 !important;
+    background: linear-gradient(90deg, #f0f2f6, #f7f8fa) !important;
+    padding: 0.85rem 1.1rem !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    color: #222 !important;
     border-radius: 8px !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* 화살표 아이콘 크게 */
+[data-testid="stExpander"] summary svg {
+    width: 20px !important;
+    height: 20px !important;
+    color: #FF4B4B !important;
 }
 
 /* 호버 */
+[data-testid="stExpander"]:not([open]):hover {
+    border-color: #FF4B4B !important;
+    box-shadow: 0 3px 10px rgba(255,75,75,0.15) !important;
+}
 [data-testid="stExpander"] summary:hover {
-    background: #eef0f5 !important;
+    background: linear-gradient(90deg, #ffe8e8, #fff3f3) !important;
     color: #FF4B4B !important;
 }
 
-/* 열린 상태 — 상단 테두리 구분선 */
+/* 열린 상태 */
+[data-testid="stExpander"][open] {
+    border-color: #FF4B4B !important;
+}
 [data-testid="stExpander"][open] summary {
-    border-bottom: 1px solid #e0e0e0 !important;
+    border-bottom: 1.5px solid #ffd0d0 !important;
     border-radius: 8px 8px 0 0 !important;
     color: #FF4B4B !important;
-    background: #fff5f5 !important;
+    background: linear-gradient(90deg, #fff0f0, #fff7f7) !important;
 }
 
 /* 내부 콘텐츠 패딩 */
 [data-testid="stExpander"] > div:last-child {
-    padding: 0.75rem 1rem !important;
+    padding: 0.8rem 1.1rem !important;
 }
 
 /* ============================================================
