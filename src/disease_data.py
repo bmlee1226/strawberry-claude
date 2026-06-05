@@ -26,6 +26,12 @@ disease_info = {
         ],
         "image": "gray_mold.png",
         "risk": "high",
+        "pesticides": [
+            {"name": "보스칼리드 수화제",         "timing": "수확 7일 전까지",  "limit": "3회 이내"},
+            {"name": "이프로디온 수화제",          "timing": "수확 3일 전까지",  "limit": "3회 이내"},
+            {"name": "플루디옥소닐 액상수화제",    "timing": "수확 1일 전까지",  "limit": "3회 이내"},
+            {"name": "사이프로디닐·플루디옥소닐 수화제", "timing": "수확 3일 전까지", "limit": "2회 이내"},
+        ],
     },
 
     1: {
@@ -53,6 +59,12 @@ disease_info = {
         ],
         "image": "powdery_mildew.jpg",
         "risk": "medium",
+        "pesticides": [
+            {"name": "트리플록시스트로빈 액상수화제", "timing": "수확 3일 전까지",  "limit": "3회 이내"},
+            {"name": "마이클로뷰타닐 수화제",         "timing": "수확 2일 전까지",  "limit": "3회 이내"},
+            {"name": "헥사코나졸 유제",               "timing": "수확 7일 전까지",  "limit": "3회 이내"},
+            {"name": "테부코나졸 유제",               "timing": "수확 7일 전까지",  "limit": "2회 이내"},
+        ],
     },
 
     "healthy": {
@@ -63,5 +75,6 @@ disease_info = {
         "solution": ["현재 상태를 유지하세요"],
         "image": "healthy.png",
         "risk": "none",
+        "pesticides": [],
     },
 }

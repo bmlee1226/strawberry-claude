@@ -28,17 +28,30 @@ def show_disease_info(class_id) -> None:
         st.image(info["image"], use_container_width=True)
 
     with col_detail:
-        tab_symptom, tab_cause, tab_solution = st.tabs(["🍃 증상", "🦠 원인", "💊 해결책"])
+        pesticides = info.get("pesticides", [])
+        tabs = st.tabs(["🍃 증상", "🦠 원인", "💊 해결책", "🧴 방제 약품"])
 
-        with tab_symptom:
+        with tabs[0]:
             st.markdown(info["symptom"])
 
-        with tab_cause:
+        with tabs[1]:
             st.markdown(info["cause"])
 
-        with tab_solution:
+        with tabs[2]:
             for item in info["solution"]:
                 st.markdown(f"- {item}")
+
+        with tabs[3]:
+            if not pesticides:
+                st.info("건강한 상태입니다. 약품이 필요하지 않습니다.")
+            else:
+                st.caption("⚠️ 반드시 라벨 지시에 따라 사용하고, 안전사용 기준을 지켜주세요.")
+                for p in pesticides:
+                    with st.container(border=True):
+                        col_a, col_b, col_c = st.columns([3, 2, 2])
+                        col_a.markdown(f"**{p['name']}**")
+                        col_b.caption(f"🗓 {p['timing']}")
+                        col_c.caption(f"🔢 {p['limit']}")
 
 
 def parse_detection_result(results) -> DetectionResult:

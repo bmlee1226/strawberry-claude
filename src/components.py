@@ -277,6 +277,7 @@ REALTIME_VIDEO_PAGE = "realtime_video"
 ANALYSIS_PAGE = "analysis"
 RESULT_PAGE = "result"
 LOADING_PAGE = "loading"
+HISTORY_PAGE = "history"
 
 
 def router():
@@ -303,6 +304,9 @@ def router():
 
     elif page == RESULT_PAGE:
         pages.page_result()
+
+    elif page == HISTORY_PAGE:
+        pages.page_history()
 
     elif page == LOADING_PAGE:
         # 빈 페이지 — 스크롤 위치를 0으로 초기화한 뒤 목적지로 이동
@@ -339,6 +343,12 @@ def render_footer():
 
     # 사이드바 — 홈 버튼 + 개발자 모드
     with st.sidebar:
+        if st.session_state.get("page") != HISTORY_PAGE:
+            if st.button("📋 진단 이력 보기", use_container_width=True):
+                import os, tempfile
+                st.session_state.page = HISTORY_PAGE
+                st.rerun()
+
         if st.session_state.get("page") != HOME_PAGE:
             if st.button("🏠 처음 화면으로", use_container_width=True, type="primary"):
                 # 임시 파일 정리

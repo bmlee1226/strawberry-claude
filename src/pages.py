@@ -16,6 +16,7 @@ from datetime import datetime
 
 from src import process
 from src import utility
+from src import history as hist
 from src.disease_data import disease_info
 
 
@@ -76,6 +77,14 @@ def page_home():
     col_l, col_m, col_r = st.columns(3)
     col_m.info("🌿 흰가루병 · 잿빛곰팡이병 진단 가능")
     st.caption("⚠️ AI 예측 결과이며, 정확한 진단은 전문가 확인이 필요합니다.")
+
+    entries = hist.load_all()
+    if entries:
+        col_h1, col_h2 = st.columns([3, 1])
+        last = entries[0]
+        col_h1.markdown(f"📋 마지막 진단: **{last.get('date','')}** — {'🚨 ' + (last.get('disease_name') or ', '.join(last.get('disease_names', []))) if last.get('detected') else '✅ 정상'}")
+        if col_h2.button("이력 보기", use_container_width=True):
+            go_to("history")
 
     # 사이드바
     with st.sidebar:
@@ -483,6 +492,7 @@ def page_analysis():
                 analysis_result = process.process_precise_video(video_path, model, conf_threshold)
 
         st.session_state.analysis_result = analysis_result
+        st.session_state._result_saved = False
 
     go_to_top("result")
   
@@ -682,6 +692,12 @@ def page_result():
 def _render_image_result(uploaded_file, analysis_result):
     detection_result = analysis_result.result_list[0]
 
+    # 이력 자동 저장 (중복 방지: 이미 저장된 결과면 건너뜀)
+    if not st.session_state.get("_result_saved"):
+        entry = hist.make_image_entry(detection_result, getattr(uploaded_file, "name", ""))
+        hist.save_entry(entry)
+        st.session_state._result_saved = True
+
     # ------- 진단 결과 배너 -------
     st.title("📋 진단 결과")
 
@@ -722,10 +738,26 @@ def _render_image_result(uploaded_file, analysis_result):
         st.caption("🤖 AI가 표시한 부분")
         st.image(detection_result.annotated_frame, channels="BGR", use_container_width=True)
 
-    # ------- 신뢰도 게이지 -------
+    # ------- 신뢰도 게이지 + 낮은 신뢰도 재촬영 안내 -------
+    LOW_CONF_THRESHOLD = 0.5
     if detection_result.detection:
         st.markdown(f"**AI 확신도: {detection_result.conf:.0%}** (높을수록 더 확실합니다)")
         st.progress(detection_result.conf)
+        if detection_result.conf < LOW_CONF_THRESHOLD:
+            st.markdown("""
+<div style='background:#fff3cd; border:2px solid #ffc107; border-radius:12px;
+     padding:1rem 1.2rem; margin-top:0.8rem;'>
+  <p style='font-size:1.1rem; font-weight:bold; color:#7d4e00; margin:0;'>
+    📸 사진을 다시 찍어주세요
+  </p>
+  <p style='font-size:0.95rem; color:#5a3900; margin:0.4rem 0 0 0;'>
+    AI가 잘 판단하지 못했습니다.<br>
+    딸기를 <b>더 가까이, 밝은 곳에서</b> 다시 찍으면 더 정확하게 확인해 드립니다.
+  </p>
+</div>
+""", unsafe_allow_html=True)
+            if st.button("📸 다시 찍으러 가기", use_container_width=True):
+                go_to("image")
 
     # ------- 병해 상세 정보 (접기) -------
     if detection_result.detection:
@@ -757,6 +789,12 @@ def _render_image_result(uploaded_file, analysis_result):
 
 def _render_video_result(analysis_result):
     analysis_type = st.session_state.analysis_type
+
+    # 이력 자동 저장
+    if not st.session_state.get("_result_saved"):
+        entry = hist.make_video_entry(analysis_result, analysis_type)
+        hist.save_entry(entry)
+        st.session_state._result_saved = True
 
     st.title("📋 진단 결과")
     detected = analysis_result.detection_frame_count
@@ -831,6 +869,75 @@ def _render_video_result(analysis_result):
                         col.caption(f"{info.get('name','?')}  확신도 {r.conf:.0%}")
   
       
+
+
+_RISK_COLOR = {"high": "#FF4B4B", "medium": "#f5a623", "none": "#21c55d"}
+_RISK_LABEL = {"high": "위험", "medium": "주의", "none": "정상"}
+
+
+def page_history():
+    st.title("📋 진단 이력")
+    st.markdown("<p style='font-size:1.1rem; color:#444;'>지금까지 진단한 결과를 확인할 수 있습니다.</p>", unsafe_allow_html=True)
+
+    entries = hist.load_all()
+
+    if not entries:
+        st.info("아직 진단 이력이 없습니다. 사진이나 동영상을 진단하면 여기에 기록됩니다.")
+        if st.button("🏠 처음 화면으로", use_container_width=True, type="primary"):
+            go_to("home")
+        return
+
+    # 요약 지표
+    total = len(entries)
+    detected_count = sum(1 for e in entries if e.get("detected"))
+    col1, col2, col3 = st.columns(3)
+    col1.metric("📊 전체 진단 수", f"{total}회")
+    col2.metric("🦠 병 발견 횟수", f"{detected_count}회")
+    col3.metric("✅ 이상 없음", f"{total - detected_count}회")
+
+    st.divider()
+
+    for entry in entries:
+        with st.container(border=True):
+            col_date, col_result, col_type = st.columns([3, 3, 2])
+
+            col_date.markdown(f"🗓 **{entry.get('date', '')}**")
+
+            if entry["type"] == "image":
+                detected = entry.get("detected", False)
+                risk = entry.get("risk", "none")
+                color = _RISK_COLOR.get(risk, "#999")
+                label = _RISK_LABEL.get(risk, "")
+                name = entry.get("disease_name", "정상")
+                conf = entry.get("confidence")
+                if detected:
+                    col_result.markdown(
+                        f"<span style='color:{color}; font-weight:bold;'>🚨 {name}</span>"
+                        + (f" <span style='color:#888; font-size:0.85rem;'>확신도 {conf:.0%}</span>" if conf else ""),
+                        unsafe_allow_html=True
+                    )
+                else:
+                    col_result.markdown("<span style='color:#21c55d; font-weight:bold;'>✅ 정상</span>", unsafe_allow_html=True)
+                col_type.caption("📷 사진 진단")
+
+            else:  # video
+                detected = entry.get("detected", False)
+                names = entry.get("disease_names", [])
+                count = entry.get("detection_frame_count", 0)
+                atype = "꼼꼼히" if entry.get("analysis_type") == "precise" else "빠른"
+                if detected:
+                    col_result.markdown(
+                        f"<span style='color:#FF4B4B; font-weight:bold;'>🚨 {', '.join(names)}</span>"
+                        f" <span style='color:#888; font-size:0.85rem;'>({count}장 발견)</span>",
+                        unsafe_allow_html=True
+                    )
+                else:
+                    col_result.markdown("<span style='color:#21c55d; font-weight:bold;'>✅ 정상</span>", unsafe_allow_html=True)
+                col_type.caption(f"🎥 {atype} 분석")
+
+    st.divider()
+    if st.button("🏠 처음 화면으로", use_container_width=True, type="primary"):
+        go_to("home")
 
 
 def go_to(page):
