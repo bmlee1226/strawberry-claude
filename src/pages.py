@@ -322,6 +322,8 @@ def page_video():
     </div>
     """, unsafe_allow_html=True)
 
+    notice = st.empty()
+
     with st.container(border=True):
         st.markdown("#### 📁 동영상 업로드")
         st.caption("MP4 · AVI · MOV · JPG · PNG 지원 · 드래그&드롭 가능 · 권장 길이 30초~3분")
@@ -335,16 +337,16 @@ def page_video():
     if uploaded_video_file is not None:
 
         if "image" in uploaded_video_file.type:
-            st.warning("🖼 이미지 파일이 업로드되었습니다.")
-            st.info("이미지 분석은 **이미지 분석** 페이지를 이용해주세요.")
-            col_i, col_r = st.columns(2)
-            with col_i:
-                if st.button("🖼 이미지 분석으로 이동", use_container_width=True, type="primary"):
-                    go_to("image")
-            with col_r:
-                if st.button("🔙 다시 업로드", use_container_width=True):
-                    st.session_state.vid_upload_key = st.session_state.get("vid_upload_key", 0) + 1
-                    st.rerun()
+            with notice.container():
+                st.warning("🖼 이미지 파일이 업로드되었습니다. 이미지 분석 페이지를 이용해주세요.")
+                col_i, col_r = st.columns(2)
+                with col_i:
+                    if st.button("🖼 이미지 분석으로 이동", use_container_width=True, type="primary"):
+                        go_to("image")
+                with col_r:
+                    if st.button("🔙 다시 업로드", use_container_width=True):
+                        st.session_state.vid_upload_key = st.session_state.get("vid_upload_key", 0) + 1
+                        st.rerun()
         else:
             video_bytes = uploaded_video_file.read()
             st.session_state.uploaded_file = uploaded_video_file
