@@ -225,14 +225,9 @@ def _render_video_analysis_options(video_path):
     """영상 정보 표시 및 분석 방식 선택 UI (업로드/실시간 공용)."""
     videoinfo = utility.get_video_info(video_path)
 
-    st.subheader("영상 정보")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("FPS", f"{videoinfo.fps:.1f}")
-    with col2:
-        st.metric("총 프레임", videoinfo.total_frames)
-    with col3:
-        st.metric("영상 길이", f"{videoinfo.duration:.1f}초")
+    st.caption(
+        f"📋 영상 정보 — 길이: {videoinfo.duration:.1f}초 · 프레임: {videoinfo.total_frames}장 · FPS: {videoinfo.fps:.1f}"
+    )
 
     FAST_FPS = 15
     PRECISE_FPS = 5
@@ -296,8 +291,6 @@ def page_video():
     video_path = st.session_state.get("video_path")
     if video_path and isinstance(st.session_state.get("uploaded_file"), _MockVideoFile):
         st.success("✅ 촬영된 동영상이 준비되었습니다.")
-        with open(video_path, "rb") as f:
-            st.video(f.read())
         _render_video_analysis_options(video_path)
         return
 
@@ -336,7 +329,6 @@ def page_video():
 
         st.session_state.video_path = tfile.name
 
-        st.video(video_bytes)
         _render_video_analysis_options(tfile.name)
 
 def page_realtime_video():
