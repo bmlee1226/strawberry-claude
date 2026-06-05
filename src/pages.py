@@ -408,7 +408,7 @@ def _render_video_detection_summary(analysis_result, compact: bool = False):
 
     if detected == 0:
         st.success("병해충이 탐지되지 않았습니다.")
-        return
+        return []
 
     st.divider()
 
@@ -428,16 +428,14 @@ def _render_video_detection_summary(analysis_result, compact: bool = False):
                 st.progress(ratio / 100)
                 st.caption(f"전체의 {ratio:.1f}%")
 
-    # ------- 병해 상세 정보 (접기) -------
+    # ------- 병해 상세 정보 (compact 모드에서는 생략 — 호출부에서 별도 렌더링) -------
     if not compact:
         st.divider()
         with st.expander("📋 병해 상세 정보 보기", expanded=False):
             for class_id, _ in sorted_counts:
                 utility.show_disease_info(class_id)
-    else:
-        st.divider()
-        for class_id, _ in sorted_counts:
-            utility.show_disease_info(class_id)
+
+    return sorted_counts
 
 
 _DEVELOPER_PASSWORD = "strawberry-dev-2024"
@@ -628,7 +626,7 @@ def _render_video_result(analysis_result):
     analysis_type = st.session_state.analysis_type
 
     if analysis_type == "precise":
-        # ------- 영상 + 다운로드 -------
+        # ------- 영상 + 탐지 요약 (2열) -------
         col_vid, col_info = st.columns([3, 2])
         with col_vid:
             st.subheader("🎬 분석 결과 영상")
@@ -643,7 +641,14 @@ def _render_video_result(analysis_result):
                 )
         with col_info:
             st.subheader("📊 탐지 요약")
-            _render_video_detection_summary(analysis_result, compact=True)
+            sorted_counts = _render_video_detection_summary(analysis_result, compact=True)
+
+        # ------- 병해 상세 정보 (전체 너비) -------
+        if sorted_counts:
+            st.divider()
+            with st.expander("📋 병해 상세 정보 보기", expanded=False):
+                for class_id, _ in sorted_counts:
+                    utility.show_disease_info(class_id)
 
     elif analysis_type == "fast":
         # ------- 탐지 요약 먼저 -------
