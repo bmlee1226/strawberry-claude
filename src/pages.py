@@ -1014,7 +1014,14 @@ def _render_share_ui(analysis_result, file_type: str):
         # ---- 텍스트 복사 (st.code 내장 복사 버튼 활용) ----
         with col_copy:
             st.markdown("**📋 텍스트 복사**")
-            st.caption("오른쪽 위 복사 아이콘을 누르세요")
+            st.markdown("""
+<div style='background:#fff8e1; border:1.5px solid #f5c518; border-radius:8px;
+     padding:0.6rem 0.8rem; margin-bottom:0.5rem; font-size:0.95rem; color:#5a4000;'>
+  👇 아래 텍스트를 <b>한 번 클릭</b>하면<br>
+  오른쪽 위에 <b>복사 아이콘 📋</b>이 나타납니다.<br>
+  그 아이콘을 누르면 복사됩니다.
+</div>
+""", unsafe_allow_html=True)
             st.code(summary, language=None)
 
         # ---- 이미지 저장 버튼 ----
