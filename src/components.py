@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from src import pages
 
 
@@ -106,6 +107,9 @@ RESULT_PAGE = "result"
 
 
 def router():
+
+    # 페이지 이동 시 최상단으로 스크롤
+    components.html("<script>window.parent.scrollTo({top: 0, behavior: 'instant'});</script>", height=0)
 
     page = st.session_state.page
 
