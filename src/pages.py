@@ -48,6 +48,32 @@ def load_model():
 model = load_model()
 
 
+def page_name_input():
+    st.markdown("""
+    <div style='text-align:center; padding:2rem 0 1rem;'>
+      <div style='font-size:3rem;'>🍓</div>
+      <h1 style='font-size:1.9rem; margin:0.4rem 0;'>딸기 병 진단기</h1>
+      <p style='font-size:1.15rem; color:#555;'>시작하기 전에 이름을 알려주세요.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown("### 👤 이름 또는 농장 이름을 입력하세요")
+        st.markdown("입력한 이름으로 진단 이력이 저장됩니다.")
+        name = st.text_input(
+            "이름",
+            placeholder="예: 홍길동 / 행복농장",
+            label_visibility="collapsed",
+            key="name_input_field",
+        )
+        if st.button("✅ 시작하기", use_container_width=True, type="primary"):
+            if name.strip():
+                st.session_state.user_name = name.strip()
+                go_to("home")
+            else:
+                st.warning("이름을 입력해 주세요.")
+
+
 def page_home():
 
     # 예시 이미지 동일 크기 고정 CSS
@@ -78,7 +104,7 @@ def page_home():
     col_m.info("🌿 흰가루병 · 잿빛곰팡이병 진단 가능")
     st.caption("⚠️ AI 예측 결과이며, 정확한 진단은 전문가 확인이 필요합니다.")
 
-    entries = hist.load_all()
+    entries = hist.load_all(user_name=st.session_state.get("user_name", ""))
     if entries:
         col_h1, col_h2 = st.columns([3, 1])
         last = entries[0]
@@ -694,7 +720,11 @@ def _render_image_result(uploaded_file, analysis_result):
 
     # 이력 자동 저장 (중복 방지: 이미 저장된 결과면 건너뜀)
     if not st.session_state.get("_result_saved"):
-        entry = hist.make_image_entry(detection_result, getattr(uploaded_file, "name", ""))
+        entry = hist.make_image_entry(
+            detection_result,
+            getattr(uploaded_file, "name", ""),
+            user_name=st.session_state.get("user_name", ""),
+        )
         hist.save_entry(entry)
         st.session_state._result_saved = True
 
@@ -792,7 +822,11 @@ def _render_video_result(analysis_result):
 
     # 이력 자동 저장
     if not st.session_state.get("_result_saved"):
-        entry = hist.make_video_entry(analysis_result, analysis_type)
+        entry = hist.make_video_entry(
+            analysis_result,
+            analysis_type,
+            user_name=st.session_state.get("user_name", ""),
+        )
         hist.save_entry(entry)
         st.session_state._result_saved = True
 
@@ -879,7 +913,9 @@ def page_history():
     st.title("📋 진단 이력")
     st.markdown("<p style='font-size:1.1rem; color:#444;'>지금까지 진단한 결과를 확인할 수 있습니다.</p>", unsafe_allow_html=True)
 
-    entries = hist.load_all()
+    user_name = st.session_state.get("user_name", "")
+    entries = hist.load_all(user_name=user_name)
+    st.caption(f"👤 {user_name}님의 진단 이력")
 
     if not entries:
         st.info("아직 진단 이력이 없습니다. 사진이나 동영상을 진단하면 여기에 기록됩니다.")

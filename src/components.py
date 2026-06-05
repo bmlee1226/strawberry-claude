@@ -278,6 +278,7 @@ ANALYSIS_PAGE = "analysis"
 RESULT_PAGE = "result"
 LOADING_PAGE = "loading"
 HISTORY_PAGE = "history"
+NAME_PAGE = "name_input"
 
 
 def router():
@@ -285,7 +286,16 @@ def router():
 
     render_scroll_notice()
 
+    # 이름 미입력 시 이름 입력 페이지로 강제 이동
+    if not st.session_state.get("user_name") and st.session_state.get("page") != NAME_PAGE:
+        st.session_state.page = NAME_PAGE
+        st.rerun()
+
     page = st.session_state.page
+
+    if page == NAME_PAGE:
+        pages.page_name_input()
+        return
 
     if page == HOME_PAGE:
         pages.page_home()
@@ -331,6 +341,7 @@ def init_session_state():
         "analysis_result": None,
         "conf_threshold": 0.3,
         "is_developer": False,
+        "user_name": "",
     }
 
     for key, value in defaults.items():
@@ -343,6 +354,16 @@ def render_footer():
 
     # 사이드바 — 홈 버튼 + 개발자 모드
     with st.sidebar:
+        # 이름 표시 + 변경
+        user_name = st.session_state.get("user_name", "")
+        if user_name:
+            st.markdown(f"👤 **{user_name}**님")
+            if st.button("이름 변경", use_container_width=True):
+                st.session_state.user_name = ""
+                st.session_state.page = NAME_PAGE
+                st.rerun()
+            st.divider()
+
         if st.session_state.get("page") != HISTORY_PAGE:
             if st.button("📋 진단 이력 보기", use_container_width=True):
                 import os, tempfile
