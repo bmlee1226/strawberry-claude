@@ -427,6 +427,97 @@ def _render_video_detection_summary(analysis_result):
         utility.show_disease_info(class_id)
 
 
+_DEVELOPER_PASSWORD = "strawberry-dev-2024"
+
+_LABEL_DIR_MAP = {
+    "정상": "healthy",
+    "흰가루병": "powdery_mildew",
+    "잿빛곰팡이병": "gray_mold",
+}
+
+
+def _save_training_image(uploaded_file, label: str) -> None:
+    save_dir = os.path.join("user_uploads", _LABEL_DIR_MAP[label])
+    os.makedirs(save_dir, exist_ok=True)
+    filename = datetime.now().strftime("%Y%m%d_%H%M%S.jpg")
+    save_path = os.path.join(save_dir, filename)
+    uploaded_file.seek(0)
+    with open(save_path, "wb") as f:
+        f.write(uploaded_file.read())
+    st.success(f"✅ [{label}] 라벨로 저장되었습니다.")
+
+
+def _render_developer_data_viewer() -> None:
+    st.divider()
+    st.subheader("🔐 개발자 — 학습 데이터 현황")
+
+    base_dir = "user_uploads"
+    if not os.path.exists(base_dir):
+        st.info("아직 저장된 학습 데이터가 없습니다.")
+        return
+
+    total = 0
+    label_counts = {}
+    for label, folder in _LABEL_DIR_MAP.items():
+        folder_path = os.path.join(base_dir, folder)
+        if os.path.exists(folder_path):
+            files = [f for f in os.listdir(folder_path) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
+            label_counts[label] = files
+            total += len(files)
+        else:
+            label_counts[label] = []
+
+    # 요약 지표
+    cols = st.columns(len(_LABEL_DIR_MAP) + 1)
+    cols[0].metric("전체 이미지", total)
+    for i, (label, files) in enumerate(label_counts.items(), 1):
+        cols[i].metric(label, len(files))
+
+    st.divider()
+
+    # 라벨별 이미지 탐색
+    selected = st.selectbox(
+        "라벨 선택",
+        list(_LABEL_DIR_MAP.keys()),
+        key="dev_label_select"
+    )
+    files = label_counts[selected]
+
+    if not files:
+        st.info(f"[{selected}] 라벨에 저장된 이미지가 없습니다.")
+        return
+
+    st.caption(f"{len(files)}개 이미지")
+
+    # 한 행에 4개씩 표시
+    cols_per_row = 4
+    for i in range(0, len(files), cols_per_row):
+        row_files = files[i:i + cols_per_row]
+        row_cols = st.columns(cols_per_row)
+        for col, fname in zip(row_cols, row_files):
+            path = os.path.join(base_dir, _LABEL_DIR_MAP[selected], fname)
+            col.image(path, caption=fname, use_container_width=True)
+
+
+def _render_developer_sidebar() -> None:
+    with st.sidebar:
+        st.divider()
+        st.subheader("🔐 개발자 모드")
+        if st.session_state.get("is_developer"):
+            st.success("개발자 모드 활성화됨")
+            if st.button("로그아웃", use_container_width=True):
+                st.session_state.is_developer = False
+                st.rerun()
+        else:
+            pw = st.text_input("비밀번호", type="password", key="dev_pw_input")
+            if st.button("로그인", use_container_width=True):
+                if pw == _DEVELOPER_PASSWORD:
+                    st.session_state.is_developer = True
+                    st.rerun()
+                else:
+                    st.error("비밀번호가 틀렸습니다.")
+
+
 def page_result():
 
     uploaded_file = st.session_state.uploaded_file
@@ -436,19 +527,19 @@ def page_result():
     if "image" in file_type:
         result_list = analysis_result.result_list
         detection_result = result_list[0]
-        
+
         utility.render_detection_result(detection_result)
 
         if detection_result.detection:
             utility.show_disease_info(detection_result.class_id)
 
+        # ------- 사용자: 피드백 및 학습 데이터 저장 -------
         st.divider()
-        st.subheader("📦 학습 데이터 저장")
+        st.subheader("📦 AI 진단 피드백")
         st.write("AI 진단 결과가 맞는지 확인하고, 올바른 라벨로 저장해 모델 개선에 기여하세요.")
 
         LABEL_OPTIONS = ["정상", "흰가루병", "잿빛곰팡이병"]
 
-        # AI가 예측한 라벨을 기본값으로 설정
         if detection_result.detection:
             class_to_label = {0: "잿빛곰팡이병", 1: "흰가루병"}
             default_label = class_to_label.get(detection_result.class_id, "정상")
@@ -462,18 +553,11 @@ def page_result():
         )
 
         if st.button("💾 학습 데이터로 저장", type="primary", use_container_width=True):
-            label_dir_map = {"정상": "healthy", "흰가루병": "powdery_mildew", "잿빛곰팡이병": "gray_mold"}
-            save_dir = os.path.join("user_uploads", label_dir_map[selected_label])
-            os.makedirs(save_dir, exist_ok=True)
+            _save_training_image(uploaded_file, selected_label)
 
-            filename = datetime.now().strftime("%Y%m%d_%H%M%S.jpg")
-            save_path = os.path.join(save_dir, filename)
-
-            uploaded_file.seek(0)
-            with open(save_path, "wb") as f:
-                f.write(uploaded_file.read())
-
-            st.success(f"✅ [{selected_label}] 라벨로 저장되었습니다. ({save_path})")
+        # ------- 개발자 전용: 저장된 학습 데이터 뷰어 -------
+        if st.session_state.get("is_developer"):
+            _render_developer_data_viewer()
 
     
     elif "video" in file_type:

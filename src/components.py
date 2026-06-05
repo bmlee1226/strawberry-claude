@@ -43,7 +43,8 @@ def init_session_state():
         "video_path": None,
         "analysis_type": None,
         "analysis_result": None,
-        "conf_threshold": 0.3
+        "conf_threshold": 0.3,
+        "is_developer": False,
     }
 
     for key, value in defaults.items():
@@ -53,6 +54,8 @@ def init_session_state():
 
 
 def render_footer():
+
+    pages._render_developer_sidebar()
 
     st.markdown("---")
 
