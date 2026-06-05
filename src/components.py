@@ -1,5 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import time
 from src import pages
 
 
@@ -108,8 +109,12 @@ RESULT_PAGE = "result"
 
 def router():
 
-    # 페이지 이동 시 최상단으로 스크롤
-    components.html("<script>window.parent.scrollTo({top: 0, behavior: 'instant'});</script>", height=0)
+    # 매 렌더마다 고유값을 넣어 캐시 방지 → 항상 최상단으로 스크롤
+    components.html(
+        f"<script>window.parent.scrollTo({{top:0,behavior:'instant'}});</script>"
+        f"<!-- {time.time()} -->",
+        height=0,
+    )
 
     page = st.session_state.page
 
