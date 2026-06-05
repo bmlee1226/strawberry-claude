@@ -63,99 +63,100 @@ def page_home():
 
     # 히어로 섹션
     st.markdown("""
-    <div style='text-align:center; padding: 2rem 0 1rem 0;'>
-      <h1>🍓 딸기 병해충 진단 AI</h1>
-      <p style='font-size:1.1rem; color:gray;'>
-        사진 또는 영상을 업로드하면 AI가 병해충을 탐지하고<br>원인과 해결 방법을 안내합니다.
+    <div style='text-align:center; padding: 1.5rem 0 0.5rem 0;'>
+      <div style='font-size:3rem;'>🍓</div>
+      <h1 style='font-size:2rem; margin:0.3rem 0;'>딸기 병 진단기</h1>
+      <p style='font-size:1.2rem; color:#555; margin:0;'>
+        딸기 사진이나 영상을 올리면<br>
+        <b>AI가 병을 확인하고 해결 방법을 알려드립니다.</b>
       </p>
     </div>
     """, unsafe_allow_html=True)
 
     col_l, col_m, col_r = st.columns(3)
-    col_m.info("🌿 현재 지원 병해: **흰가루병**, **잿빛곰팡이병**")
-    st.caption("⚠️ 본 결과는 AI 예측이며, 정확한 진단은 전문가 확인이 필요합니다.")
+    col_m.info("🌿 흰가루병 · 잿빛곰팡이병 진단 가능")
+    st.caption("⚠️ AI 예측 결과이며, 정확한 진단은 전문가 확인이 필요합니다.")
 
-    # 사이드바 설정
+    # 사이드바
     with st.sidebar:
-        st.header("⚙️ 설정")
-        st.divider()
+        st.markdown("### ⚙️ 민감도 설정")
+        st.markdown("숫자가 낮을수록 병을 더 많이 찾습니다.<br>처음엔 **0.30** 그대로 두세요.", unsafe_allow_html=True)
         conf_threshold = st.slider(
-            "신뢰도 임계값 (Confidence Threshold)",
+            "민감도",
             min_value=0.1,
             max_value=1.0,
             value=st.session_state.get("conf_threshold", 0.3),
-            step=0.05
+            step=0.05,
+            label_visibility="collapsed",
         )
-        st.caption("값이 낮을수록 더 많은 병해를 탐지하지만 오탐 가능성이 증가할 수 있습니다.")
+        st.markdown(f"<p style='text-align:center; font-size:1.3rem; font-weight:bold;'>현재: {conf_threshold:.2f}</p>", unsafe_allow_html=True)
 
     st.session_state.conf_threshold = conf_threshold
     st.divider()
 
-    # 분석 방식 선택 카드
-    st.markdown(
-        "<h3 style='text-align:center; margin-bottom: 0.2rem;'>📌 분석 방식을 선택하세요</h3>",
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        "<p style='text-align:center; color:gray; margin-bottom: 1.5rem;'>아래 카드 중 하나를 클릭해 시작하세요</p>",
-        unsafe_allow_html=True
-    )
+    # 시작 방법 선택
+    st.markdown("""
+    <h2 style='text-align:center; margin-bottom:0.3rem;'>어떻게 진단할까요?</h2>
+    <p style='text-align:center; color:#666; font-size:1.05rem; margin-bottom:1.2rem;'>
+      아래 세 가지 중 하나를 골라 누르세요.
+    </p>
+    """, unsafe_allow_html=True)
 
     colum1, colum2, colum3 = st.columns(3)
 
     with colum1:
         with st.container(border=True):
-            st.markdown("## 🖼️")
-            st.subheader("이미지 분석")
-            st.write("딸기 사진을 업로드하거나 카메라로 촬영하면 AI가 즉시 병해충을 진단합니다.")
-            st.caption("✅ 빠른 분석 · 사진 1장")
+            st.markdown("<div style='font-size:2.5rem; text-align:center;'>📷</div>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align:center; margin:0.3rem 0;'>사진으로 진단</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; color:#555; font-size:0.95rem;'>찍은 사진을 올리거나<br>지금 바로 찍어주세요</p>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("👉 이미지 분석 시작하기", use_container_width=True, type="primary"):
+            if st.button("📷 사진으로 시작", use_container_width=True, type="primary"):
                 go_to("image")
 
     with colum2:
         with st.container(border=True):
-            st.markdown("## 🎥")
-            st.subheader("동영상 분석")
-            st.write("딸기 재배 영상을 업로드하면 AI가 전체 구간에서 병해충을 탐지합니다.")
-            st.caption("✅ 넓은 구역 탐지 · MP4/AVI/MOV")
+            st.markdown("<div style='font-size:2.5rem; text-align:center;'>🎥</div>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align:center; margin:0.3rem 0;'>동영상으로 진단</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; color:#555; font-size:0.95rem;'>찍어둔 동영상을<br>올려주세요</p>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("👉 동영상 분석 시작하기", use_container_width=True, type="primary"):
+            if st.button("🎥 동영상으로 시작", use_container_width=True, type="primary"):
                 go_to("video")
 
     with colum3:
         with st.container(border=True):
-            st.markdown("## 📹")
-            st.subheader("실시간 촬영 분석")
-            st.write("카메라로 직접 딸기를 촬영하고 바로 병해충을 분석합니다.")
-            st.caption("✅ 현장 즉시 촬영 · 빠른/정밀 분석")
+            st.markdown("<div style='font-size:2.5rem; text-align:center;'>📹</div>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align:center; margin:0.3rem 0;'>직접 찍어서 진단</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align:center; color:#555; font-size:0.95rem;'>카메라로 지금 바로<br>딸기를 찍어주세요</p>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("👉 실시간 촬영 시작하기", use_container_width=True, type="primary"):
+            if st.button("📹 직접 찍어서 시작", use_container_width=True, type="primary"):
                 go_to("realtime_video")
 
     st.divider()
 
     # 예시 이미지
-    st.subheader("📷 병해 예시 이미지")
+    st.markdown("<h3 style='text-align:center;'>📷 이런 병이 있을 때 사용하세요</h3>", unsafe_allow_html=True)
     col_a, col_b, col_c = st.columns(3)
 
     with col_a:
         st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
         st.image("gray_mold.png", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        st.caption("🔴 잿빛곰팡이병")
+        st.markdown("<p style='text-align:center; font-size:1rem; font-weight:bold; color:#cc3300;'>🔴 잿빛곰팡이병</p>", unsafe_allow_html=True)
+        st.caption("과실에 회색 곰팡이가 핌")
 
     with col_b:
         st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
         st.image("powdery_mildew.jpg", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        st.caption("🟡 흰가루병")
+        st.markdown("<p style='text-align:center; font-size:1rem; font-weight:bold; color:#cc8800;'>🟡 흰가루병</p>", unsafe_allow_html=True)
+        st.caption("잎에 흰 가루가 덮임")
 
     with col_c:
         st.markdown('<div class="example-img-wrap">', unsafe_allow_html=True)
         st.image("healthy.png", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        st.caption("🟢 정상")
+        st.markdown("<p style='text-align:center; font-size:1rem; font-weight:bold; color:#117733;'>🟢 건강한 상태</p>", unsafe_allow_html=True)
+        st.caption("이상 없음")
 
 def page_image():
 

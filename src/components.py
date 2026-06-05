@@ -220,6 +220,30 @@ def inject_responsive_css():
     height: 180px !important;
   }
 }
+
+/* ============================================================
+   사이드바 노인 친화 스타일
+   ============================================================ */
+[data-testid="stSidebar"] {
+    background: #fafafa !important;
+}
+[data-testid="stSidebar"] h3 {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #222 !important;
+}
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] label {
+    font-size: 1rem !important;
+    color: #444 !important;
+    line-height: 1.6 !important;
+}
+[data-testid="stSidebar"] .stButton > button {
+    height: 3.2rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -316,7 +340,7 @@ def render_footer():
     # 사이드바 — 홈 버튼 + 개발자 모드
     with st.sidebar:
         if st.session_state.get("page") != HOME_PAGE:
-            if st.button("🏠 처음으로", use_container_width=True):
+            if st.button("🏠 처음 화면으로", use_container_width=True, type="primary"):
                 # 임시 파일 정리
                 analysis_result = st.session_state.get("analysis_result")
                 if analysis_result:
