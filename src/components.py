@@ -102,7 +102,7 @@ def render_scroll_notice():
     """모바일에서만 표시되는 최상단 이동 안내."""
     st.markdown("""
 <div class="scroll-notice">
-  📌 화면 상단으로 이동하려면 <b>상태바(시간 표시줄)</b>를 탭하세요.
+  📌 페이지 이동 후 내용이 아래에 있다면 <b>위로 스크롤</b>해주세요.
 </div>
 <style>
 .scroll-notice {
