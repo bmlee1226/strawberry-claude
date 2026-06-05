@@ -5,3 +5,4 @@ numpy
 Pillow
 streamlit-webrtc
 av
+streamlit-autorefresh
