@@ -7,6 +7,8 @@ import cv2
 import av
 import numpy as np
 import threading
+import io
+import zipfile
 import os
 import tempfile
 from datetime import datetime
@@ -487,7 +489,24 @@ def _render_developer_data_viewer() -> None:
         st.info(f"[{selected}] 라벨에 저장된 이미지가 없습니다.")
         return
 
-    st.caption(f"{len(files)}개 이미지")
+    col_info, col_btn = st.columns([3, 1])
+    col_info.caption(f"{len(files)}개 이미지")
+
+    # ZIP 생성 후 다운로드
+    zip_buf = io.BytesIO()
+    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for fname in files:
+            path = os.path.join(base_dir, _LABEL_DIR_MAP[selected], fname)
+            zf.write(path, arcname=fname)
+    zip_buf.seek(0)
+
+    col_btn.download_button(
+        label="⬇ ZIP 다운로드",
+        data=zip_buf,
+        file_name=f"{_LABEL_DIR_MAP[selected]}.zip",
+        mime="application/zip",
+        use_container_width=True,
+    )
 
     # 한 행에 4개씩 표시
     cols_per_row = 4
