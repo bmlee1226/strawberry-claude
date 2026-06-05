@@ -1,6 +1,102 @@
 import streamlit as st
 from src import pages
 
+
+def inject_responsive_css():
+    st.markdown("""
+<style>
+/* ============================================================
+   PC 기본 레이아웃
+   ============================================================ */
+.block-container {
+    padding: 2rem 3rem !important;
+    max-width: 1100px !important;
+}
+
+/* ============================================================
+   모바일 (768px 이하)
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* 여백 축소 */
+  .block-container {
+    padding: 1rem 0.75rem !important;
+  }
+
+  /* 버튼 — 터치하기 쉽게 크게 */
+  .stButton > button {
+    height: 3.2rem !important;
+    font-size: 1rem !important;
+    border-radius: 10px !important;
+  }
+
+  /* 제목 크기 조정 */
+  h1 { font-size: 1.6rem !important; }
+  h2 { font-size: 1.3rem !important; }
+  h3 { font-size: 1.1rem !important; }
+
+  /* metric 카드 패딩 축소 */
+  [data-testid="metric-container"] {
+    padding: 0.4rem !important;
+  }
+  [data-testid="metric-container"] label {
+    font-size: 0.75rem !important;
+  }
+  [data-testid="metric-container"] [data-testid="stMetricValue"] {
+    font-size: 1.1rem !important;
+  }
+
+  /* 단계 표시바 — 모바일에서 줄바꿈 허용 */
+  .step-bar {
+    flex-wrap: wrap !important;
+    gap: 0.3rem !important;
+  }
+
+  /* 사이드바 — 모바일에서 숨김 처리 후 햄버거로 접근 */
+  [data-testid="stSidebar"] {
+    min-width: 220px !important;
+  }
+
+  /* 파일 업로더 영역 */
+  [data-testid="stFileUploader"] {
+    padding: 0.5rem !important;
+  }
+
+  /* expander 헤더 */
+  [data-testid="stExpander"] summary {
+    font-size: 0.95rem !important;
+  }
+
+  /* progress bar 텍스트 */
+  [data-testid="stProgressBar"] p {
+    font-size: 0.8rem !important;
+  }
+
+  /* 예시 이미지 높이 축소 */
+  .example-img-wrap img {
+    height: 140px !important;
+  }
+
+  /* 컨테이너 테두리 카드 패딩 축소 */
+  [data-testid="stVerticalBlockBorderWrapper"] > div {
+    padding: 0.6rem !important;
+  }
+}
+
+/* ============================================================
+   태블릿 (769px ~ 1024px)
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .block-container {
+    padding: 1.5rem 1.5rem !important;
+  }
+  .example-img-wrap img {
+    height: 180px !important;
+  }
+}
+</style>
+""", unsafe_allow_html=True)
+
 HOME_PAGE = "home"
 IMAGE_PAGE = "image"
 VIDEO_PAGE = "video"

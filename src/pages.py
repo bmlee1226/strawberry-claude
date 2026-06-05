@@ -163,7 +163,7 @@ def page_image():
 
     # 단계 표시
     st.markdown("""
-    <div style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
+    <div class='step-bar' style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
       <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>1 이미지 업로드</span>
       <span style='color:#ccc;'>→</span>
       <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>2 AI 분석</span>
@@ -240,7 +240,7 @@ def _render_video_analysis_options(video_path):
     precise_estimated_time = videoinfo.total_frames / PRECISE_FPS
 
     st.markdown("""
-    <div style='display:flex; gap:0.5rem; align-items:center; margin: 1rem 0 0.5rem 0;'>
+    <div class='step-bar' style='display:flex; gap:0.5rem; align-items:center; margin: 1rem 0 0.5rem 0;'>
       <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>1 동영상 업로드</span>
       <span style='color:#ccc;'>→</span>
       <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>2 분석 방식 선택</span>
@@ -303,7 +303,7 @@ def page_video():
 
     # 단계 표시
     st.markdown("""
-    <div style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
+    <div class='step-bar' style='display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;'>
       <span style='background:#FF4B4B; color:white; padding:4px 14px; border-radius:20px; font-weight:bold;'>1 동영상 업로드</span>
       <span style='color:#ccc;'>→</span>
       <span style='background:#eee; color:#aaa; padding:4px 14px; border-radius:20px;'>2 분석 방식 선택</span>
