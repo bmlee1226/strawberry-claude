@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from ultralytics import YOLO
 from PIL import Image
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode, RTCConfiguration
@@ -188,6 +189,22 @@ def page_image():
         with st.container(border=True):
             st.markdown("#### 📷 카메라 촬영")
             st.caption("카메라로 직접 촬영합니다")
+            # st.camera_input은 facingMode를 지원하지 않으므로 JS로 후면 카메라 우선 설정
+            components.html("""
+<script>
+(function() {
+  const orig = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getUserMedia = function(constraints) {
+    if (constraints && constraints.video) {
+      constraints.video = typeof constraints.video === 'object'
+        ? { ...constraints.video, facingMode: 'environment' }
+        : { facingMode: 'environment' };
+    }
+    return orig(constraints);
+  };
+})();
+</script>
+""", height=0)
             camera_image = st.camera_input(
                 "사진 촬영",
                 label_visibility="collapsed",
