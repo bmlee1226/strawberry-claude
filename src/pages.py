@@ -381,37 +381,39 @@ def page_analysis():
   go_to("result")
   
 
-def _render_video_detection_summary(analysis_result):
-    """동영상 분석 결과 요약 카드를 렌더링한다."""
-
-    st.divider()
-    st.header("📊 병해충 탐지 결과")
-    st.caption(f"신뢰도 임계값: {analysis_result.conf_threshold}")
-
+def _render_video_detection_summary(analysis_result, compact: bool = False):
+    """동영상 분석 결과 요약 카드를 렌더링한다.
+    compact=True 이면 헤더·divider 없이 컬럼 안에 들어갈 수 있는 형태로 렌더링.
+    """
     total_frames = len(analysis_result.result_list) or analysis_result.detection_frame_count
     detected = analysis_result.detection_frame_count
     healthy = total_frames - detected if total_frames else 0
 
-    # ------- 상단 요약 지표 -------
+    if not compact:
+        st.divider()
+        st.header("📊 병해충 탐지 결과")
+
+    st.caption(f"신뢰도 임계값: {analysis_result.conf_threshold}")
+
+    # ------- 요약 지표 -------
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("🎞 분석 프레임", f"{total_frames}프레임")
+        st.metric("🎞 분석", f"{total_frames}프레임")
     with col2:
-        st.metric("🦠 병해 탐지 프레임", f"{detected}프레임",
+        st.metric("🦠 병해 탐지", f"{detected}프레임",
                   delta=f"{detected/total_frames*100:.1f}%" if total_frames else None,
                   delta_color="inverse")
     with col3:
-        st.metric("✅ 정상 프레임", f"{healthy}프레임")
+        st.metric("✅ 정상", f"{healthy}프레임")
+
+    if detected == 0:
+        st.success("병해충이 탐지되지 않았습니다.")
+        return
 
     st.divider()
 
-    if detected == 0:
-        st.success("✅ 병해충이 탐지되지 않았습니다. 현재 상태를 유지하세요.")
-        return
-
     # ------- 클래스별 탐지 비율 카드 -------
-    st.subheader("🔍 클래스별 탐지 현황")
-
+    st.markdown("**클래스별 탐지 현황**")
     counts = analysis_result.detected_class_counts
     sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
 
@@ -426,12 +428,16 @@ def _render_video_detection_summary(analysis_result):
                 st.progress(ratio / 100)
                 st.caption(f"전체의 {ratio:.1f}%")
 
-    st.divider()
-
-    # ------- 병해 상세 정보 -------
-    st.subheader("📋 병해 상세 정보")
-    for class_id, _ in sorted_counts:
-        utility.show_disease_info(class_id)
+    # ------- 병해 상세 정보 (접기) -------
+    if not compact:
+        st.divider()
+        with st.expander("📋 병해 상세 정보 보기", expanded=False):
+            for class_id, _ in sorted_counts:
+                utility.show_disease_info(class_id)
+    else:
+        st.divider()
+        for class_id, _ in sorted_counts:
+            utility.show_disease_info(class_id)
 
 
 _DEVELOPER_PASSWORD = "strawberry-dev-2024"
@@ -547,83 +553,118 @@ def page_result():
     uploaded_file = st.session_state.uploaded_file
     file_type = uploaded_file.type
     analysis_result = st.session_state.analysis_result
-    
+
     if "image" in file_type:
-        result_list = analysis_result.result_list
-        detection_result = result_list[0]
-
-        utility.render_detection_result(detection_result)
-
-        if detection_result.detection:
-            utility.show_disease_info(detection_result.class_id)
-
-        # ------- 사용자: 피드백 및 학습 데이터 저장 -------
-        st.divider()
-        st.subheader("📦 AI 진단 피드백")
-        st.write("AI 진단 결과가 맞는지 확인하고, 올바른 라벨로 저장해 모델 개선에 기여하세요.")
-
-        LABEL_OPTIONS = ["정상", "흰가루병", "잿빛곰팡이병"]
-
-        if detection_result.detection:
-            class_to_label = {0: "잿빛곰팡이병", 1: "흰가루병"}
-            default_label = class_to_label.get(detection_result.class_id, "정상")
-        else:
-            default_label = "정상"
-
-        selected_label = st.selectbox(
-            "실제 병해 라벨을 선택하세요",
-            LABEL_OPTIONS,
-            index=LABEL_OPTIONS.index(default_label)
-        )
-
-        if st.button("💾 학습 데이터로 저장", type="primary", use_container_width=True):
-            _save_training_image(uploaded_file, selected_label)
-
-        # ------- 개발자 전용: 저장된 학습 데이터 뷰어 -------
-        if st.session_state.get("is_developer"):
-            _render_developer_data_viewer()
-
-    
+        _render_image_result(uploaded_file, analysis_result)
     elif "video" in file_type:
-        if st.session_state.analysis_type == "fast":
-            result_list = analysis_result.result_list
-            for detection_result in result_list:
-                utility.render_detection_result(detection_result)
+        _render_video_result(analysis_result)
 
-        elif st.session_state.analysis_type == "precise":
-            st.video(analysis_result.final_output)
-            with open(analysis_result.final_output, "rb") as file:
-                st.download_button(
-                    label="결과 영상 다운로드",
-                    data=file,
-                    file_name="result.mp4",
-                    mime="video/mp4"
-                )
-
-        _render_video_detection_summary(analysis_result)
-        
-    if st.button("🔙 처음으로"):
-
+    st.divider()
+    if st.button("🔙 처음으로", use_container_width=True):
         temp_output = analysis_result.temp_output
-    
         if temp_output and os.path.exists(temp_output):
-    
             os.remove(temp_output)
-
-        video_path = st.session_state.get(
-            "video_path"
-        )
-        
+        video_path = st.session_state.get("video_path")
         if video_path and os.path.exists(video_path):
-        
             os.remove(video_path)
-    
         st.session_state.uploaded_file = None
         st.session_state.video_path = None
         st.session_state.analysis_result = None
         st.session_state.analysis_type = None
-          
         go_to("home")
+
+
+def _render_image_result(uploaded_file, analysis_result):
+    detection_result = analysis_result.result_list[0]
+
+    # ------- 진단 결과 배너 -------
+    if detection_result.detection:
+        info = disease_info[detection_result.class_id]
+        st.error(f"### 🚨 {info['name']} 감지됨  |  신뢰도 {detection_result.conf:.0%}")
+    else:
+        st.success("### ✅ 병해충이 탐지되지 않았습니다. 현재 상태를 유지하세요.")
+
+    # ------- 원본 vs 탐지 이미지 -------
+    col_orig, col_det = st.columns(2)
+    with col_orig:
+        st.caption("📷 업로드 원본")
+        uploaded_file.seek(0)
+        st.image(uploaded_file.read(), use_container_width=True)
+    with col_det:
+        st.caption("🔍 AI 탐지 결과")
+        st.image(detection_result.annotated_frame, channels="BGR", use_container_width=True)
+
+    # ------- 신뢰도 게이지 -------
+    if detection_result.detection:
+        st.markdown("**탐지 신뢰도**")
+        st.progress(detection_result.conf, text=f"{detection_result.conf:.0%}")
+
+    # ------- 병해 상세 정보 (접기) -------
+    if detection_result.detection:
+        with st.expander("📋 병해 상세 정보 보기", expanded=False):
+            utility.show_disease_info(detection_result.class_id)
+
+    # ------- 피드백 & 학습 데이터 저장 -------
+    st.divider()
+    with st.container(border=True):
+        st.subheader("📦 AI 진단 피드백")
+        st.write("AI 진단 결과가 맞는지 확인하고, 올바른 라벨로 저장해 모델 개선에 기여하세요.")
+
+        LABEL_OPTIONS = ["정상", "흰가루병", "잿빛곰팡이병"]
+        class_to_label = {0: "잿빛곰팡이병", 1: "흰가루병"}
+        default_label = class_to_label.get(detection_result.class_id, "정상") if detection_result.detection else "정상"
+
+        col_sel, col_btn = st.columns([3, 1])
+        selected_label = col_sel.selectbox("실제 병해 라벨을 선택하세요", LABEL_OPTIONS, index=LABEL_OPTIONS.index(default_label))
+        col_btn.markdown("<br>", unsafe_allow_html=True)
+        if col_btn.button("💾 저장", use_container_width=True, type="primary"):
+            _save_training_image(uploaded_file, selected_label)
+
+    if st.session_state.get("is_developer"):
+        _render_developer_data_viewer()
+
+
+def _render_video_result(analysis_result):
+    analysis_type = st.session_state.analysis_type
+
+    if analysis_type == "precise":
+        # ------- 영상 + 다운로드 -------
+        col_vid, col_info = st.columns([3, 2])
+        with col_vid:
+            st.subheader("🎬 분석 결과 영상")
+            st.video(analysis_result.final_output)
+            with open(analysis_result.final_output, "rb") as f:
+                st.download_button(
+                    label="⬇ 결과 영상 다운로드",
+                    data=f,
+                    file_name="result.mp4",
+                    mime="video/mp4",
+                    use_container_width=True,
+                )
+        with col_info:
+            st.subheader("📊 탐지 요약")
+            _render_video_detection_summary(analysis_result, compact=True)
+
+    elif analysis_type == "fast":
+        # ------- 탐지 요약 먼저 -------
+        _render_video_detection_summary(analysis_result)
+
+        # ------- 프레임별 결과는 expander로 접기 -------
+        detected_frames = [r for r in analysis_result.result_list if r.detection]
+        total = len(analysis_result.result_list)
+
+        with st.expander(f"🖼 프레임별 탐지 이미지 보기 ({len(detected_frames)}/{total}프레임 탐지)", expanded=False):
+            if not detected_frames:
+                st.info("탐지된 프레임이 없습니다.")
+            else:
+                cols_per_row = 3
+                for i in range(0, len(detected_frames), cols_per_row):
+                    row = detected_frames[i:i + cols_per_row]
+                    cols = st.columns(cols_per_row)
+                    for col, r in zip(cols, row):
+                        info = disease_info.get(r.class_id, {})
+                        col.image(r.annotated_frame, channels="BGR", use_container_width=True)
+                        col.caption(f"{info.get('name','?')}  |  {r.conf:.0%}")
   
       
 
