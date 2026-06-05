@@ -4,23 +4,41 @@ import streamlit as st
 from src.disease_data import disease_info
 from src.data_models import DetectionResult, VideoInfo
 
-def show_disease_info(class_id: int) -> None:
+_RISK_BADGE = {
+    "high":   ("🔴", "위험"),
+    "medium": ("🟡", "주의"),
+    "none":   ("🟢", "정상"),
+}
 
+
+def show_disease_info(class_id) -> None:
     info = disease_info.get(class_id)
+    if not info:
+        return
 
-    st.header(f"🩺 {info['name']}  병해충 정보")
+    icon, label = _RISK_BADGE.get(info.get("risk", "none"), ("⚪", ""))
 
-    with st.container(border=True):
+    st.markdown(f"## {icon} {info['name']} <sup style='font-size:0.6em; color:gray;'>{label}</sup>",
+                unsafe_allow_html=True)
 
-        st.write(info["symptom"])
-        st.write(info["cause"])
-        st.write(info["solution"])
+    # 예시 이미지 + 탭 나란히
+    col_img, col_detail = st.columns([1, 2])
 
-        st.write("🍓 병해 예시 이미지")
+    with col_img:
+        st.image(info["image"], use_container_width=True)
 
-        st.image(info["image"])
+    with col_detail:
+        tab_symptom, tab_cause, tab_solution = st.tabs(["🍃 증상", "🦠 원인", "💊 해결책"])
 
-        st.caption(info["name"])
+        with tab_symptom:
+            st.markdown(info["symptom"])
+
+        with tab_cause:
+            st.markdown(info["cause"])
+
+        with tab_solution:
+            for item in info["solution"]:
+                st.markdown(f"- {item}")
 
 
 def parse_detection_result(results) -> DetectionResult:
