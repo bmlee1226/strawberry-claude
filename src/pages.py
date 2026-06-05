@@ -346,7 +346,7 @@ def page_realtime_video():
         rtc_configuration=_RTC_CONFIG,
         video_processor_factory=_VideoRecorder,
         media_stream_constraints={
-            "video": {"facingMode": {"ideal": "environment"}},
+            "video": {"facingMode": "environment"},
             "audio": False,
         },
         async_processing=True,
