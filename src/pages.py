@@ -229,12 +229,12 @@ def page_image():
         else:
             st.session_state.uploaded_file = uploaded_file
             st.success("✅ 이미지가 업로드되었습니다. AI 분석을 시작합니다...")
-            go_to("analysis")
+            go_to_top("analysis")
 
     elif camera_image:
         st.session_state.uploaded_file = camera_image
         st.success("✅ 사진이 촬영되었습니다. AI 분석을 시작합니다...")
-        go_to("analysis")
+        go_to_top("analysis")
 
 def _render_video_analysis_options(video_path):
     """영상 정보 표시 및 분석 방식 선택 UI (업로드/실시간 공용)."""
@@ -461,7 +461,7 @@ def page_analysis():
 
         st.session_state.analysis_result = analysis_result
 
-    go_to("result")
+    go_to_top("result")
   
 
 def _render_video_detection_summary(analysis_result, compact: bool = False):
@@ -758,7 +758,12 @@ def _render_video_result(analysis_result):
 
 
 def go_to(page):
-
     st.session_state.page = page
+    st.rerun()
 
+
+def go_to_top(page):
+    """빈 loading 페이지를 경유해 스크롤을 최상단으로 초기화한 뒤 이동."""
+    st.session_state.next_page = page
+    st.session_state.page = "loading"
     st.rerun()

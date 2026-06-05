@@ -127,6 +127,7 @@ VIDEO_PAGE = "video"
 REALTIME_VIDEO_PAGE = "realtime_video"
 ANALYSIS_PAGE = "analysis"
 RESULT_PAGE = "result"
+LOADING_PAGE = "loading"
 
 
 def router():
@@ -153,6 +154,15 @@ def router():
 
     elif page == RESULT_PAGE:
         pages.page_result()
+
+    elif page == LOADING_PAGE:
+        # 빈 페이지 — 스크롤 위치를 0으로 초기화한 뒤 목적지로 이동
+        with st.spinner(""):
+            import time as _t
+            _t.sleep(0.05)
+        next_page = st.session_state.get("next_page", HOME_PAGE)
+        st.session_state.page = next_page
+        st.rerun()
 
     else:
         st.error("존재하지 않는 페이지입니다.")
