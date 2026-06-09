@@ -342,9 +342,14 @@ def init_session_state():
     }
 
     for key, value in defaults.items():
-
         if key not in st.session_state:
             st.session_state[key] = value
+
+    # 세션당 1회 접속 카운트
+    if not st.session_state.get("_access_counted"):
+        from src import stats as _stats
+        _stats.record_access()
+        st.session_state._access_counted = True
 
 
 def render_footer():

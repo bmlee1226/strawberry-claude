@@ -22,6 +22,7 @@ from src import process
 from src import utility
 from src import history as hist
 from src import weather as wx
+from src import stats
 from src.disease_data import disease_info
 
 
@@ -579,6 +580,14 @@ def page_analysis():
         st.session_state._result_saved = False
         st.session_state._result_save_status = None
 
+        # 분석 사용 횟수 기록
+        if "image" in file_type:
+            stats.record_analysis("image")
+        elif st.session_state.analysis_type == "fast":
+            stats.record_analysis("fast")
+        elif st.session_state.analysis_type == "precise":
+            stats.record_analysis("precise")
+
     go_to_top("result")
   
 
@@ -661,7 +670,32 @@ def _save_training_image(uploaded_file, label: str) -> None:
 
 def _render_developer_data_viewer() -> None:
     st.divider()
-    st.subheader("🔐 개발자 — 학습 데이터 현황")
+    st.subheader("🔐 개발자 — 통계 및 학습 데이터 현황")
+
+    # ------- 사용 통계 -------
+    s = stats.get_stats()
+    total_analysis = sum(s.get("analysis", {}).values())
+
+    st.markdown("#### 📊 사용 통계")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("🔑 총 접속", f"{s.get('access', 0)}회")
+    c2.metric("🔬 총 분석", f"{total_analysis}회")
+    c3.metric("📷 이미지", f"{s.get('analysis', {}).get('image', 0)}회")
+    c4.metric("⚡ 빠른 분석", f"{s.get('analysis', {}).get('fast', 0)}회")
+    c5.metric("🔬 정밀 분석", f"{s.get('analysis', {}).get('precise', 0)}회")
+
+    # 최근 7일 일별 현황
+    daily = s.get("daily", {})
+    if daily:
+        st.markdown("**최근 일별 현황**")
+        sorted_days = sorted(daily.keys(), reverse=True)[:7]
+        cols = st.columns(len(sorted_days))
+        for col, day in zip(cols, sorted_days):
+            d = daily[day]
+            col.markdown(f"**{day[-5:]}**")  # MM-DD
+            col.caption(f"접속 {d.get('access',0)} / 분석 {d.get('analysis',0)}")
+
+    st.divider()
 
     base_dir = "user_uploads"
     if not os.path.exists(base_dir):
