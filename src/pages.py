@@ -1223,6 +1223,45 @@ def _render_history_save_ui():
                 st.rerun()
 
 
+def page_stats():
+    st.title("📊 사용 통계")
+    st.caption("개발자 전용 페이지입니다.")
+
+    s = stats.get_stats()
+    total_analysis = sum(s.get("analysis", {}).values())
+
+    # 전체 요약
+    st.markdown("### 전체 요약")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("🔑 총 접속", f"{s.get('access', 0)}회")
+    c2.metric("🔬 총 분석", f"{total_analysis}회")
+    c3.metric("📷 이미지", f"{s.get('analysis', {}).get('image', 0)}회")
+    c4.metric("⚡ 빠른 분석", f"{s.get('analysis', {}).get('fast', 0)}회")
+    c5.metric("🔬 정밀 분석", f"{s.get('analysis', {}).get('precise', 0)}회")
+
+    st.divider()
+
+    # 일별 현황
+    daily = s.get("daily", {})
+    if daily:
+        st.markdown("### 일별 현황")
+        sorted_days = sorted(daily.keys(), reverse=True)
+
+        for day in sorted_days:
+            d = daily[day]
+            with st.container(border=True):
+                col_d, col_a, col_an = st.columns(3)
+                col_d.markdown(f"**📅 {day}**")
+                col_a.metric("접속", f"{d.get('access', 0)}회")
+                col_an.metric("분석", f"{d.get('analysis', 0)}회")
+    else:
+        st.info("아직 기록된 데이터가 없습니다.")
+
+    st.divider()
+    if st.button("🏠 처음 화면으로", use_container_width=True, type="primary"):
+        go_to("home")
+
+
 def page_history():
     st.title("📋 진단 이력")
     st.markdown("<p style='font-size:1.1rem; color:#444;'>지금까지 진단한 결과를 확인할 수 있습니다.</p>", unsafe_allow_html=True)

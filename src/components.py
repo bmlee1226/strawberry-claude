@@ -279,6 +279,7 @@ RESULT_PAGE = "result"
 LOADING_PAGE = "loading"
 HISTORY_PAGE = "history"
 NAME_PAGE = "name_input"
+STATS_PAGE = "stats"
 
 
 def router():
@@ -312,6 +313,9 @@ def router():
 
     elif page == HISTORY_PAGE:
         pages.page_history()
+
+    elif page == STATS_PAGE:
+        pages.page_stats()
 
     elif page == LOADING_PAGE:
         # 빈 페이지 — 스크롤 위치를 0으로 초기화한 뒤 목적지로 이동
@@ -365,6 +369,11 @@ def render_footer():
                 st.session_state.page = NAME_PAGE
                 st.rerun()
             st.divider()
+
+        if st.session_state.get("is_developer") and st.session_state.get("page") != STATS_PAGE:
+            if st.button("📊 통계 보기", use_container_width=True):
+                st.session_state.page = STATS_PAGE
+                st.rerun()
 
         if st.session_state.get("page") != HISTORY_PAGE:
             if st.button("📋 진단 이력 보기", use_container_width=True):
